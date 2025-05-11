@@ -19,5 +19,7 @@ namespace NodeLinkEditor.Models
         public Guid StartNodeID { get; set; }
         public Guid EndNodeID { get; set; }
         public List<LinkAttribute> Attributes { get; set; } = [];
+        public double StartToEndCost { get; set; } = 1.0;
+        public double EndToStartCost { get; set; } = 1.0;
     }
 }

@@ -14,17 +14,26 @@
     </UserControl.DataContext>
     <UserControl.Resources>
         <converter:AdjNodePositionConverter x:Key="AdjNodePositionConverter"/>
+        <converter:SelectedToColorConverter x:Key="SelectedToColorConverter"/>
         <converter:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <converter:TaperedLineConverter x:Key="TaperedLineConverter"/>
     </UserControl.Resources>
     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                   CanContentScroll="True">
+                   CanContentScroll="True" KeyDown="ScrollViewer_KeyDown">
         <Grid>
-            <Canvas Width="{Binding MapData.Width}" Height="{Binding MapData.Height}" Background="{DynamicResource {x:Static SystemColors.AccentColorBrushKey}}"
+            <Canvas Width="{Binding MapData.Width}" Height="{Binding MapData.Height}" Background="LightGray"
                     MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
                     MouseMove="Canvas_MouseMove"
                     MouseLeftButtonUp="Canvas_MouseLeftButtonUp"
-                    MouseLeave="Canvas_MouseLeave" >
-                <Image Source="{Binding MapData.MapImage}" Width="{Binding MapData.Height}" Height="{Binding MapData.Height}" Stretch="Fill"/>
+                    MouseLeave="Canvas_MouseLeave"
+                    Tag="{Binding DataContext, ElementName=RootControl}">
+                <Canvas.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="クリア"
+                                  Command="{Binding PlacementTarget.Tag.ClearSelectionCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                    </ContextMenu>
+                </Canvas.ContextMenu>
+                <Image Source="{Binding MapData.MapImage}" Width="{Binding MapData.Width}" Height="{Binding MapData.Height}" Stretch="Fill"/>
                 <ItemsControl ItemsSource="{Binding Links}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -33,18 +42,27 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Line X1="{Binding StartNode.X}" Y1="{Binding StartNode.Y}"
-                                  X2="{Binding EndNode.X}"   Y2="{Binding EndNode.Y}"
-                                  Stroke="Black" StrokeThickness="2"
-                                  Tag="{Binding DataContext, ElementName=RootControl}">
-                                <Line.ContextMenu>
+                            <Path Stroke="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}" 
+                                  Fill="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}"
+                                  StrokeThickness="0.5"
+                                  Tag="{Binding DataContext, ElementName=RootControl}"
+                                  MouseLeftButtonDown="Line_MouseLeftButtonDown">
+                                <Path.Data>
+                                    <MultiBinding Converter="{StaticResource TaperedLineConverter}">
+                                        <Binding Path="StartNode.Point" />
+                                        <Binding Path="EndNode.Point" />
+                                        <Binding Path="StartThickness" />
+                                        <Binding Path="EndThickness" />
+                                    </MultiBinding>
+                                </Path.Data>
+                                <Path.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem Header="削除"
                                                   Command="{Binding PlacementTarget.Tag.RemoveLinkCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{Binding}"/>
                                     </ContextMenu>
-                                </Line.ContextMenu>
-                            </Line>
+                                </Path.ContextMenu>
+                            </Path>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -56,10 +74,16 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Ellipse Width="{Binding DataContext.NodeSize, ElementName=RootControl}"
-                                     Height="{Binding DataContext.NodeSize, ElementName=RootControl}"
-                                     Fill="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}"
-                                     Tag="{Binding DataContext, ElementName=RootControl}">
+                            <Ellipse Width="{Binding DataContext.NodeSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                     Height="{Binding DataContext.NodeSize, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                     Tag="{Binding DataContext, ElementName=RootControl}"
+                                     MouseLeftButtonDown="Ellipse_MouseLeftButtonDown">
+                                <Ellipse.Fill>
+                                    <MultiBinding Converter="{StaticResource SelectedToColorConverter}">
+                                        <Binding Path="IsSelected"/>
+                                        <Binding Path="IsReferenced"/>
+                                    </MultiBinding>
+                                </Ellipse.Fill>
                                 <Ellipse.ContextMenu>
                                     <ContextMenu>
                                         <MenuItem Header="削除"

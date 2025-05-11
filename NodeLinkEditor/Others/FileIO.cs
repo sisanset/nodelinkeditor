@@ -61,7 +61,7 @@ namespace NodeLinkEditor.Others
                 {
                     throw new Exception($"Link {l.ID} has invalid node references.");
                 }
-                var link = new LinkViewModel(startNode, endNode);
+                var link = new LinkViewModel(l, startNode, endNode);
                 links.Add(link);
             }
             if (data.YamlFileName == null || data.YamlFileName == string.Empty)

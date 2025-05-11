@@ -17,14 +17,58 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="110"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="110"/>
+            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
         <TextBox Text="{Binding SelectedNode.X }" Name="TextBoxNodePosX" Grid.Column="0" Grid.Row="0" LostFocus="TextBoxNodePos_LostFocus"/>
         <TextBox Text="{Binding SelectedNode.Y}" Name="TextBoxNodePosY" Grid.Column="1" Grid.Row="0" LostFocus="TextBoxNodePos_LostFocus"/>
         <TextBlock Text="{Binding MapData.Resolution}" Grid.Column="0" Grid.Row="1"/>
         <TextBlock Text="{Binding MapData.Origin[0]}" Grid.Column="1" Grid.Row="1"/>
         <TextBlock Text="{Binding MapData.Origin[1]}" Grid.Column="2" Grid.Row="1"/>
+
+        <TextBlock Text="属性一覧(保持中):" FontWeight="Bold" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" />
+        <ListBox ItemsSource="{Binding SelectedNode.Attributes}" Height="100" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}" Width="50"/>
+                        <Button Content="削除"
+                            Command="{Binding DataContext.RemoveAttributeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <TextBlock Text="追加する属性:" FontWeight="Bold" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" />
+        <ComboBox ItemsSource="{Binding AllAttributes}" x:Name="attributeComboBox" Grid.Row="5" Grid.Column="0" SelectedIndex="0"/>
+        <Button Content="追加"
+                    Command="{Binding AddAttributeCommand}"
+                    CommandParameter="{Binding SelectedItem, ElementName=attributeComboBox}"
+                    Margin="5,0,0,0" Grid.Row="5" Grid.Column="1"/>
+        
+        <TextBlock Text="関連ノード:" FontWeight="Bold" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" />
+        <ListBox ItemsSource="{Binding SelectedNode.AssociatedNodes}" Height="100" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}" Width="150"/>
+                        <Button Content="削除"
+                            Command="{Binding DataContext.RemoveAssociatedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Content="選択中のNodeを追加"
+                    Command="{Binding AddAssociatedCommand}"
+                    Margin="5,0,0,0" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2"/>
     </Grid>
 </UserControl>

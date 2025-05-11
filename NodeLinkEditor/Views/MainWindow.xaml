@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NodeLinkEditor.Views"
         xmlns:vm="clr-namespace:NodeLinkEditor.ViewModels"
+        xmlns:converter="clr-namespace:NodeLinkEditor.Converters"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    </Window.Resources>
     <Window.DataContext>
         <vm:MainWindowViewModel/>
     </Window.DataContext>
@@ -26,9 +30,18 @@
                 <MenuItem Header="Vertical" Command="{Binding AlignVerticalCommand}"/>
             </MenuItem>
         </Menu>
-        <DockPanel>
-            <local:MapView DockPanel.Dock="Left" Width="600" DataContext="{Binding MapEditor}" />
-            <local:AttributeEditor DockPanel.Dock="Right" Width="200" DataContext="{Binding MapEditor}" />
-        </DockPanel>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <local:MapView Grid.Column="0" DataContext="{Binding MapEditor}" />
+            <local:AttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Width="200"
+                                   Visibility="{Binding SelectedNode, Converter={StaticResource NullToVisibilityConverter}}"/>
+            <local:LinkAttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Width="200"
+                                       Visibility="{Binding SelectedLink, Converter={StaticResource NullToVisibilityConverter}}"/>
+        
+        </Grid>
     </DockPanel>
 </Window>

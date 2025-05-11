@@ -21,5 +21,6 @@ namespace NodeLinkEditor.ViewModels
 
         public ICommand UndoCommand => MapEditor.UndoCommand;
         public ICommand RedoCommand => MapEditor.RedoCommand;
+        public ICommand ClearSelectionCommand => MapEditor.ClearSelectionCommand;
     }
 }

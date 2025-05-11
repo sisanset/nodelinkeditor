@@ -3,34 +3,45 @@ using NodeLinkEditor.Others;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System;
 
 namespace NodeLinkEditor.ViewModels
 {
-
-
     public class NodeViewModel : INotifyPropertyChanged
     {
-        private Node _node;
-        public Guid ID { get { return _node.ID; } }
+
+        public Guid ID { get; init; }
+        public double _x;
         public double X
         {
-            get { return _node.X; }
+            get { return _x; }
             set
             {
-                _node.X = value;
+                _x = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(Point));
             }
         }
+        public double _y;
 
         public double Y
         {
-            get { return _node.Y; }
+            get { return _y; }
             set
             {
-                _node.Y = value;
+                _y = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(Point));
             }
         }
+        public Point Point
+        {
+            get { return new Point(X, Y); }
+        }
+        public ObservableCollection<Guid> AssociatedNodes { get; set; } = [];
+        public ObservableCollection<NodeAttribute> Attributes { get; set; } = [];
 
         private bool _isSelected = false;
         public bool IsSelected
@@ -42,14 +53,27 @@ namespace NodeLinkEditor.ViewModels
                 OnPropertyChanged();
             }
         }
+        private bool _isReferenced = false;
+        public bool IsReferenced
+        {
+            get { return _isReferenced; }
+            set
+            {
+                _isReferenced = value;
+                OnPropertyChanged();
+            }
+        }
 
         public NodeViewModel(Node node)
         {
-            _node = node;
+            ID = node.ID;
+            _x = node.X;
+            _y = node.Y;
+            Attributes = [.. node.Attributes.Distinct()];
+            AssociatedNodes = [.. node.AssociatedNodes.Distinct()];
         }
-        public NodeViewModel(double x, double y)
+        public NodeViewModel(double x, double y) : this(new Node() { X = x, Y = y })
         {
-            _node = new Node { X = x, Y = y };
         }
         public Node GetNodeCopy()
         {
@@ -58,8 +82,8 @@ namespace NodeLinkEditor.ViewModels
                 ID = ID,
                 X = X,
                 Y = Y,
-                AssociatedNodes = [.. _node.AssociatedNodes.Select(n => n)],
-                Attributes = [.. _node.Attributes.Select(a => a)],
+                AssociatedNodes = [.. AssociatedNodes],
+                Attributes = [.. Attributes],
             };
         }
 

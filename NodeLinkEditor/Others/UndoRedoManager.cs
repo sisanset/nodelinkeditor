@@ -7,6 +7,8 @@ namespace NodeLinkEditor.Others
     {
         private Stack<IUndoableCommand> _undoStack = new();
         private Stack<IUndoableCommand> _redoStack = new();
+        public bool CanUndo => _undoStack.Count > 0;
+        public bool CanRedo => _redoStack.Count > 0;
 
         public void Execute(IUndoableCommand command)
         {
