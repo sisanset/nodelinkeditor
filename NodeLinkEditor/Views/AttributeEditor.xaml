@@ -1,0 +1,63 @@
+<UserControl x:Class="NodeLinkEditor.Views.AttributeEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:NodeLinkEditor.Views"
+             xmlns:vm="clr-namespace:NodeLinkEditor.ViewModels"
+             mc:Ignorable="d"
+              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.DataContext>
+        <vm:MapEditorViewModel/>
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+            <ColumnDefinition Width="60"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="25"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="座標値[m]:" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,0,0" />
+        <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" Margin="40,0,0,0" />
+        <TextBox Text="{Binding SelectedNode.X }" Name="TextBoxNodePosX" Grid.Row="1" Grid.Column="1" LostFocus="TextBoxNodePos_LostFocus"/>
+        <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" Margin="40,0,0,0"/>
+        <TextBox Text="{Binding SelectedNode.Y}" Name="TextBoxNodePosY"  Grid.Row="2" Grid.Column="1" LostFocus="TextBoxNodePos_LostFocus" />
+
+        <TextBlock Text="属性一覧:" FontWeight="Bold" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
+        <ItemsControl ItemsSource="{Binding SelectedNode.AttributeOptions}" Height="80" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <CheckBox Content="{Binding Attribute}"
+                              IsChecked="{Binding IsSelected}"/>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Text="関連ノード:" FontWeight="Bold" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,0,0" />
+        <ListBox ItemsSource="{Binding SelectedNode.AssociatedNodes}" Height="100" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}" Width="110"/>
+                        <Button Content="削除"
+                            Command="{Binding DataContext.RemoveAssociatedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Button Content="選択中のNodeを追加"
+                    Command="{Binding AddAssociatedCommand}"
+                    Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Margin="0,5,0,0"/>
+    </Grid>
+</UserControl>

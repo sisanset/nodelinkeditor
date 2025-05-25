@@ -1,0 +1,71 @@
+﻿<Window x:Class="NodeLinkEditor.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NodeLinkEditor.Views"
+        xmlns:vm="clr-namespace:NodeLinkEditor.ViewModels"
+        xmlns:converter="clr-namespace:NodeLinkEditor.Converters"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown">
+    <Window.Resources>
+        <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    </Window.Resources>
+    <Window.DataContext>
+        <vm:MainWindowViewModel/>
+    </Window.DataContext>
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="Save NodeLink" Command="{Binding SaveNodeLinkCommand}"/>
+                <MenuItem Header="Load NodeLink" Command="{Binding LoadNodeLinkCommand}"/>
+                <MenuItem Header="Load Map" Command="{Binding LoadMapCommand}"/>
+            </MenuItem>
+            <MenuItem Header="Edit">
+                <MenuItem Header="Undo" Command="{Binding UndoCommand}"/>
+                <MenuItem Header="Redo" Command="{Binding RedoCommand}"/>
+                <MenuItem Header="Create Nodes Between" 
+                          Command="{Binding CreateNodesBetweenCommand}"
+                          CommandParameter="NodeInterval"/>
+                <MenuItem Header="Create Nodes Between Intersections" 
+                          Command="{Binding CreateNodesBetweenCommand}"
+                          CommandParameter="StartEndInterval"/>
+                <MenuItem Header="Create Nodes Between InterSection node" 
+                          Command="{Binding CreateNodesBetweenCommand}"
+                          CommandParameter="StartInterval"/>
+            </MenuItem>
+            <MenuItem Header="Align">
+                <MenuItem Header="Horizontal" Command="{Binding AlignHorizontalCommand}"/>
+                <MenuItem Header="Vertical" Command="{Binding AlignVerticalCommand}"/>
+                <MenuItem Header="LineEqual" Command="{Binding AlignLineEqualCommand}"/>
+            </MenuItem>
+            <MenuItem Header="HelperLine">
+                <MenuItem Header="Create Node at Intersection" Command="{Binding CreateNodeAtIntersectionCommand}"/>
+            </MenuItem>
+        </Menu>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="200"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <local:MapView DataContext="{Binding MapEditor}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"/>
+            <local:AttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Grid.Row="0" Width="200"
+                                   Visibility="{Binding SelectedNode, Converter={StaticResource NullToVisibilityConverter}}"/>
+            <local:LinkAttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Grid.Row="0" Width="200"
+                                       Visibility="{Binding SelectedLink, Converter={StaticResource NullToVisibilityConverter}}"/>
+            <local:HelperLineAttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Grid.Row="0" Width="200"
+                                             Visibility="{Binding SelectedHelperLine, Converter={StaticResource NullToVisibilityConverter}}"/>
+            <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Margin="5,5,0,5">
+                <TextBlock Text="編集モード:" FontWeight="Bold" Margin="5,0,0,5"/>
+                <RadioButton Content="ノード/リンク編集" IsChecked="{Binding MapEditor.IsNodeLinkMode}" Margin="15,0,0,0" />
+                <RadioButton Content="補助線編集" IsChecked="{Binding MapEditor.IsHelperLineMode}"  Margin="15,0,0,0"/>
+            </StackPanel>
+
+        </Grid>
+    </DockPanel>
+</Window>
