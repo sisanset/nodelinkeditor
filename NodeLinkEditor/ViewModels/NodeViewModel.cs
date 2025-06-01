@@ -4,8 +4,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System;
 
 namespace NodeLinkEditor.ViewModels
 {

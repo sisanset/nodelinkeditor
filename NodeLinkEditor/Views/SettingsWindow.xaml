@@ -1,0 +1,18 @@
+<Window x:Class="NodeLinkEditor.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Height="300" Width="400">
+    <Grid>
+        <StackPanel>
+            <TextBlock Text="Node Interval"/>
+            <TextBox Text="{Binding NodeInterval}"/>
+            <TextBlock Text="Intersection Interval"/>
+            <TextBox Text="{Binding IntersectionInterval}"/>
+            <TextBlock Text="MQTT Broker Address"/>
+            <TextBox Text="{Binding MqttClient.BrokerAddress}"/>
+            <TextBlock Text="MQTT Broker Port"/>
+            <TextBox Text="{Binding MqttClient.BrokerPort}"/>
+            <Button Content="Save" Click="SaveButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

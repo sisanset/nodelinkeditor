@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Windows.Input;
-using NodeLinkEditor.Models;
 
 namespace NodeLinkEditor.ViewModels
 {
@@ -22,6 +21,8 @@ namespace NodeLinkEditor.ViewModels
 
         public ICommand CreateNodeAtIntersectionCommand => MapEditor.CreateNodeAtIntersectionCommand;
         public ICommand CreateNodesBetweenCommand => MapEditor.CreateNodesBetweenCommand;
+        public ICommand ConnectMQTTCommand => MapEditor.ConnectMQTTCommand;
+        public ICommand DisconnectMQTTCommand => MapEditor.DisconnectMQTTCommand;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)

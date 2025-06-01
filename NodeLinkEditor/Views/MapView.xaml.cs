@@ -2,30 +2,48 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows;
 using NodeLinkEditor.ViewModels;
-using System.Linq;
-using System.Collections.Generic;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using NodeLinkEditor.Converters;
-using System.Collections.ObjectModel;
 using System.Windows.Threading;
-using System.Reflection;
 using NodeLinkEditor.Others;
 using NodeLinkEditor.Models;
-using System.Diagnostics;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace NodeLinkEditor.Views
 {
-    public partial class MapView : UserControl
+    public partial class MapView : UserControl, INotifyPropertyChanged
     {
+        private bool _isDrawingHelperLine = false;
+        public bool IsDrawingHelperLine
+        {
+            get => _isDrawingHelperLine;
+            set { _isDrawingHelperLine = value; OnPropertyChanged(); }
+        }
+
+        private double _scale = 1.0;
+        public double Scale
+        {
+            get => _scale;
+            set
+            {
+                _scale = Math.Max(_minScale, Math.Min(_maxScale, value));
+                OnPropertyChanged();
+            }
+        }
+        private double _zoomFactor = 1.1;
+        private double _minScale = 0.5;
+        private double _maxScale = 2.0;
+
         private NodeViewModel? _draggedNode;
         private Point _dragStartPoint;
         private DispatcherTimer _dragTimer;
         private bool _isTimerElapsed = false;
-
         private DispatcherTimer _scrollTimer;
         private Point _lastMousePosition;
         private bool _isMouseInside = false;
+
         public MapView()
         {
             InitializeComponent();
@@ -47,6 +65,13 @@ namespace NodeLinkEditor.Views
             _scrollTimer.Start();
         }
 
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         private void ScrollViewer_MouseMove(object sender, MouseEventArgs e)
         {
             if (sender is not ScrollViewer scrollViewer) return;
@@ -58,13 +83,9 @@ namespace NodeLinkEditor.Views
         private void ScrollTimer_Tick(object? sender, EventArgs e)
         {
             if (!_isMouseInside) return;
-            if (DataContext is MapEditorViewModel viewModel)
-            {
-                if (!viewModel.IsDrawingHelperLine && _draggedNode == null)
-                { return; }
-            }
+            if (!IsDrawingHelperLine && _draggedNode == null) return;
 
-            var scrollViewer = (this.Content as ScrollViewer);
+            var scrollViewer = MainScrollViewer;
             if (scrollViewer == null) return;
             // ScrollViewerのサイズを取得
             double viewportWidth = scrollViewer.ViewportWidth;
@@ -103,12 +124,13 @@ namespace NodeLinkEditor.Views
             // Node作成
             switch (viewModel.SelectedMode)
             {
-                case Models.EditMode.NodeLink:
+                case Models.EditMode.Node:
                     viewModel.CreateNodeCommand.Execute(point);
                     break;
                 case Models.EditMode.HelperLine:
-                    if (viewModel.IsDrawingHelperLine)
+                    if (IsDrawingHelperLine)
                     {
+                        IsDrawingHelperLine = false;
                         viewModel.DrawingHelperLine.EndX = point.X;
                         viewModel.DrawingHelperLine.EndY = point.Y;
                         viewModel.CreateHelperLineCommand.Execute(viewModel.DrawingHelperLine);
@@ -122,7 +144,7 @@ namespace NodeLinkEditor.Views
                             EndX = point.X,
                             EndY = point.Y,
                         });
-                        viewModel.IsDrawingHelperLine = true;
+                        IsDrawingHelperLine = true;
                     }
                     break;
                 default:
@@ -142,13 +164,15 @@ namespace NodeLinkEditor.Views
             if (DataContext is MapEditorViewModel viewModel)
             {
                 Point point = GetCoordFromPixel(sender, e);
+                MousePositionText.Text = $"Mouse Position: X = {point.X:N3}, Y = {point.Y:N3}";
+
                 if (e.LeftButton == MouseButtonState.Pressed && _draggedNode != null && _isTimerElapsed)
                 {
                     _draggedNode.X = point.X;
                     _draggedNode.Y = point.Y;
                     // if point.XがCanvasの範囲外->MouseLeftButtonUp<-これをやると中途半端に外に出た場合帰ってこれなくなるのでやらない
                 }
-                if (e.LeftButton != MouseButtonState.Pressed && viewModel.SelectedMode == EditMode.HelperLine && viewModel.IsDrawingHelperLine)
+                if (e.LeftButton != MouseButtonState.Pressed && viewModel.SelectedMode == EditMode.HelperLine && IsDrawingHelperLine)
                 {
                     viewModel.DrawingHelperLine.EndX = point.X;
                     viewModel.DrawingHelperLine.EndY = point.Y;
@@ -209,25 +233,28 @@ namespace NodeLinkEditor.Views
                 return;
             }
 
-            // Line作成
             viewModel.SelectedNode = node;
-            var startNode = viewModel.StartNode;
-            var endNode = viewModel.EndNode;
-            if (startNode == null)
-            { viewModel.StartNode = node; }
-            else if (endNode == null)
+            // Line作成
+            if (viewModel.SelectedMode == EditMode.Link)
             {
-                // 同node、または既存のLinkがある場合は、Line作成しない
-                if (startNode.ID == node.ID)
-                { }
-                else if (viewModel.Links.Any(l =>
-                    (startNode.ID == l.StartNode.ID && node.ID == l.EndNode.ID) ||
-                    (startNode.ID == l.EndNode.ID && node.ID == l.StartNode.ID)))
+                var startNode = viewModel.StartNode;
+                var endNode = viewModel.EndNode;
+                if (startNode == null)
                 { viewModel.StartNode = node; }
-                else
+                else if (endNode == null)
                 {
-                    viewModel.EndNode = node;
-                    viewModel.CreateLinkCommand.Execute(null);
+                    // 同node、または既存のLinkがある場合は、Line作成しない
+                    if (startNode.ID == node.ID)
+                    { }
+                    else if (viewModel.Links.Any(l =>
+                        (startNode.ID == l.StartNode.ID && node.ID == l.EndNode.ID) ||
+                        (startNode.ID == l.EndNode.ID && node.ID == l.StartNode.ID)))
+                    { viewModel.StartNode = node; }
+                    else
+                    {
+                        viewModel.EndNode = node;
+                        viewModel.CreateLinkCommand.Execute(null);
+                    }
                 }
             }
 
@@ -342,6 +369,24 @@ namespace NodeLinkEditor.Views
                 { return; }
                 e.Handled = true;
                 viewModel.SelectedHelperLine = line.DataContext as HelperLineViewModel;
+            }
+        }
+
+        private void Canvas_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (!Keyboard.IsKeyDown(Key.LeftCtrl)) { return; }
+            if (DataContext is MapEditorViewModel viewModel)
+            {
+                var point = e.GetPosition((IInputElement)sender);
+                var offsetX = MainScrollViewer.HorizontalOffset;
+                var offsetY = MainScrollViewer.VerticalOffset;
+                var scaleRatio = 0 < e.Delta ? _zoomFactor : 1.0 / _zoomFactor;
+                var oldScale = Scale;
+                Scale *= scaleRatio;
+                if (oldScale == Scale) { e.Handled = true; return; }
+
+                MainScrollViewer.ScrollToHorizontalOffset((point.X * scaleRatio) - (point.X - offsetX));
+                MainScrollViewer.ScrollToVerticalOffset((point.Y * scaleRatio) - (point.Y - offsetY));
             }
         }
     }

@@ -32,5 +32,14 @@ namespace NodeLinkEditor.Views
             }
 
         }
+
+        private void SwapNodes_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is MapEditorViewModel viewModel && viewModel.SelectedLink != null)
+            {
+                (viewModel.SelectedLink.StartNode, viewModel.SelectedLink.EndNode) =
+                (viewModel.SelectedLink.EndNode, viewModel.SelectedLink.StartNode);
+            }
+        }
     }
 }

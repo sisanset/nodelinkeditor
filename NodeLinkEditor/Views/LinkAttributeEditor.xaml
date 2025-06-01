@@ -24,6 +24,8 @@
             <RowDefinition Height="30"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock Text="コスト:" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Margin="5,0,0,0"/>
         <TextBlock Text="S->E:"  Grid.Row="1" Grid.Column="0" Margin="25,0,0,0"/>
@@ -42,5 +44,8 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <TextBlock Text="{Binding SelectedLink.StartNode.ID, StringFormat='StartNode : {0}'}" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
+        <TextBlock Text="{Binding SelectedLink.EndNode.ID, StringFormat='EndNode   : {0}'}" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
+        <Button Content="ノード入れ替え" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" Click="SwapNodes_Click"/>
     </Grid>
 </UserControl>

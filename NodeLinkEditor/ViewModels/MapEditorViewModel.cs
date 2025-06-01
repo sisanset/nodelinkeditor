@@ -5,14 +5,14 @@ using NodeLinkEditor.Others;
 using Microsoft.Win32;
 using System.Runtime.CompilerServices;
 using NodeLinkEditor.Models;
+using System.Windows;
 
 namespace NodeLinkEditor.ViewModels
 {
     public class MapEditorViewModel : INotifyPropertyChanged
     {
         public double NodeInterval { get; set; } = 50.0;
-        public double StartInterval { get; set; } = 10.0;
-        public double EndInterval { get; set; } = 10.0;
+        public double IntersectionInterval { get; set; } = 10.0;
         private UndoRedoManager _undoRedoManager = new();
         public ObservableCollection<NodeViewModel> Nodes { get; set; } = [];
         public ObservableCollection<LinkViewModel> Links { get; set; } = [];
@@ -86,7 +86,7 @@ namespace NodeLinkEditor.ViewModels
             set { _mapData = value; OnPropertyChanged(); }
         }
 
-        private EditMode _selectedMode = EditMode.NodeLink;
+        private EditMode _selectedMode = EditMode.Node;
         public EditMode SelectedMode
         {
             get => _selectedMode;
@@ -97,15 +97,26 @@ namespace NodeLinkEditor.ViewModels
                 ClearSelection();
             }
         }
-        public bool IsNodeLinkMode
+        public bool IsNodeMode
         {
-            get => SelectedMode == EditMode.NodeLink;
+            get => SelectedMode == EditMode.Node;
             set
             {
                 if (value)
                 {
-                    SelectedMode = EditMode.NodeLink;
+                    SelectedMode = EditMode.Node;
                     OnPropertyChanged(nameof(SelectedMode));
+                }
+            }
+        }
+        public bool IsLinkMode
+        {
+            get => SelectedMode == EditMode.Link;
+            set
+            {
+                if (value)
+                {
+                    SelectedMode = EditMode.Link;
                 }
             }
         }
@@ -117,7 +128,6 @@ namespace NodeLinkEditor.ViewModels
                 if (value)
                 {
                     SelectedMode = EditMode.HelperLine;
-                    OnPropertyChanged(nameof(SelectedMode));
                 }
             }
         }
@@ -141,17 +151,21 @@ namespace NodeLinkEditor.ViewModels
                 SelectedLink = null;
             }
         }
-        private bool _isDrawingHelperLine = false;
-        public bool IsDrawingHelperLine
-        {
-            get => _isDrawingHelperLine;
-            set { _isDrawingHelperLine = value; OnPropertyChanged(); }
-        }
         private HelperLineViewModel _DrawingHelperLine = new();
         public HelperLineViewModel DrawingHelperLine
         {
             get => _DrawingHelperLine;
             set { _DrawingHelperLine = value; OnPropertyChanged(); }
+        }
+
+        public AMRMqttClient MqttClient { get; }
+        public AMRViewModel AMRModel { get; set; } = new();
+
+        private bool _isMqttConnected = false;
+        public bool IsMqttConnected
+        {
+            get => _isMqttConnected;
+            set { _isMqttConnected = value; OnPropertyChanged(); }
         }
 
         public ICommand CreateNodeCommand { get; }
@@ -175,6 +189,8 @@ namespace NodeLinkEditor.ViewModels
         public ICommand MoveHelperLineCommand { get; }
         public ICommand CreateNodeAtIntersectionCommand { get; }
         public ICommand CreateNodesBetweenCommand { get; }
+        public ICommand ConnectMQTTCommand { get; }
+        public ICommand DisconnectMQTTCommand { get; }
 
         public void ClearSelection()
         {
@@ -185,7 +201,6 @@ namespace NodeLinkEditor.ViewModels
             SelectedNodes.Clear();
             StartNode = null;
             EndNode = null;
-            IsDrawingHelperLine = false;
             SelectedHelperLine = null;
         }
 
@@ -236,14 +251,33 @@ namespace NodeLinkEditor.ViewModels
                         if (betweenType == "NodeInterval")
                         { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], 0.0, 0.0, NodeInterval); }
                         else if (betweenType == "StartEndInterval")
-                        { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], StartInterval, EndInterval, NodeInterval); }
+                        { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], IntersectionInterval, IntersectionInterval, NodeInterval); }
                         else if (betweenType == "StartInterval")
-                        { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], StartInterval, 0.0, NodeInterval); }
+                        { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], IntersectionInterval, 0.0, NodeInterval); }
+                        else if (betweenType == "EndInterval")
+                        { CreateNodesBetween(SelectedNodes[0], SelectedNodes[1], 0.0, IntersectionInterval, NodeInterval); }
                         else
                         { return; }
                     }
                 },
                 CanCreateNodesBetween);
+
+            MqttClient = new AMRMqttClient();
+            MqttClient.SetMessageReceivedEvent((x, y, z) => Application.Current.Dispatcher.Invoke(() => AMRModel.SetAMR(x, y, z)));
+            MqttClient.SetConnectedEvent(() => Application.Current.Dispatcher.Invoke(() => IsMqttConnected = true));
+            MqttClient.SetDisconnectedEvent(() => Application.Current.Dispatcher.Invoke(() => { IsMqttConnected = false; AMRModel.IsConnected = false; }));
+
+            ConnectMQTTCommand = new Others.RelayCommand(async (_) =>
+            {
+                await MqttClient.Connect();
+                await MqttClient.Subscribe();
+            });
+            DisconnectMQTTCommand = new Others.RelayCommand(async (_) =>
+            {
+                AMRModel.IsConnected = false;
+                await MqttClient.Unsubscribe();
+                await MqttClient.Disconnect();
+            });
         }
 
         private void MoveNode(object? parameter)
@@ -402,11 +436,10 @@ namespace NodeLinkEditor.ViewModels
 
         private void CreateHelperLine(object? parameter)
         {
-            if (IsDrawingHelperLine && parameter is HelperLineViewModel line)
+            if (parameter is HelperLineViewModel line)
             {
                 _undoRedoManager.Execute(new AddCommand<HelperLineViewModel>(HelperLines, line));
             }
-            IsDrawingHelperLine = false;
         }
         private void RemoveHelperLine(object? parameter)
         {

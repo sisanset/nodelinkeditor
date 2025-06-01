@@ -112,5 +112,38 @@ namespace NodeLinkEditor.Others
             return deserializer.Deserialize<MapYaml>(File.ReadAllText(filePath, Encoding.UTF8));
         }
 
+        public class SettingsYaml
+        {
+            public double NodeInterval { get; set; } = 3;
+            public double IntersectionInterval { get; set; } = 1;
+            public string MqttBroker { get; set; } = "localhost";
+            public int MqttPort { get; set; } = 1883;
+        }
+        public static void SaveSettingsYaml(string fileName, SettingsYaml settingsParam)
+        {
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .IgnoreFields()
+                .Build();
+            using var writer = new StreamWriter(fileName, false, Encoding.UTF8);
+            serializer.Serialize(writer, settingsParam);
+        }
+        public static SettingsYaml LoadSettingsYaml(string filePath)
+        {
+            var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+            try
+            {
+                return deserializer.Deserialize<SettingsYaml>(File.ReadAllText(filePath, Encoding.UTF8));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading settings file: {ex.Message}");
+                return new SettingsYaml();
+            }
+
+        }
     }
 }

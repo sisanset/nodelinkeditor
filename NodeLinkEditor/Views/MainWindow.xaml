@@ -10,6 +10,7 @@
         Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown">
     <Window.Resources>
         <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <converter:BoolToColorConverter x:Key="BoolToColorConverter" />
     </Window.Resources>
     <Window.DataContext>
         <vm:MainWindowViewModel/>
@@ -24,15 +25,18 @@
             <MenuItem Header="Edit">
                 <MenuItem Header="Undo" Command="{Binding UndoCommand}"/>
                 <MenuItem Header="Redo" Command="{Binding RedoCommand}"/>
-                <MenuItem Header="Create Nodes Between" 
+                <MenuItem Header="Create Nodes Between"
                           Command="{Binding CreateNodesBetweenCommand}"
                           CommandParameter="NodeInterval"/>
-                <MenuItem Header="Create Nodes Between Intersections" 
+                <MenuItem Header="Create Nodes Between Intersections"
                           Command="{Binding CreateNodesBetweenCommand}"
                           CommandParameter="StartEndInterval"/>
-                <MenuItem Header="Create Nodes Between InterSection node" 
+                <MenuItem Header="Create Nodes Between InterSection and Node"
                           Command="{Binding CreateNodesBetweenCommand}"
                           CommandParameter="StartInterval"/>
+                <MenuItem Header="Create Nodes Between Node and Intersection"
+                          Command="{Binding CreateNodesBetweenCommand}"
+                          CommandParameter="EndInterval"/>
             </MenuItem>
             <MenuItem Header="Align">
                 <MenuItem Header="Horizontal" Command="{Binding AlignHorizontalCommand}"/>
@@ -41,6 +45,16 @@
             </MenuItem>
             <MenuItem Header="HelperLine">
                 <MenuItem Header="Create Node at Intersection" Command="{Binding CreateNodeAtIntersectionCommand}"/>
+            </MenuItem>
+            <MenuItem Header="Tools">
+                <MenuItem Header="Settings" Click="Settings_Click"/>
+            </MenuItem>
+            <Ellipse Width="10" Height="10" Stroke="Black" StrokeThickness="1"
+                     Fill="{Binding MapEditor.IsMqttConnected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Green,Red'}"
+                     Margin="5,5,-10,5"/>
+            <MenuItem Header="MQTT">
+                <MenuItem Header="Connect" Command="{Binding ConnectMQTTCommand}"/>
+                <MenuItem Header="DisConnect" Command="{Binding DisconnectMQTTCommand}"/>
             </MenuItem>
         </Menu>
         <Grid>
@@ -62,7 +76,8 @@
                                              Visibility="{Binding SelectedHelperLine, Converter={StaticResource NullToVisibilityConverter}}"/>
             <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Margin="5,5,0,5">
                 <TextBlock Text="編集モード:" FontWeight="Bold" Margin="5,0,0,5"/>
-                <RadioButton Content="ノード/リンク編集" IsChecked="{Binding MapEditor.IsNodeLinkMode}" Margin="15,0,0,0" />
+                <RadioButton Content="ノード編集" IsChecked="{Binding MapEditor.IsNodeMode}" Margin="15,0,0,0" />
+                <RadioButton Content="リンク編集" IsChecked="{Binding MapEditor.IsLinkMode}" Margin="15,0,0,0" />
                 <RadioButton Content="補助線編集" IsChecked="{Binding MapEditor.IsHelperLineMode}"  Margin="15,0,0,0"/>
             </StackPanel>
 

@@ -18,18 +18,25 @@
         <converter:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <converter:TaperedLineConverter x:Key="TaperedLineConverter"/>
         <converter:PositionConverter x:Key="PositionConverter"/>
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </UserControl.Resources>
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+    <Grid>
+        <ScrollViewer x:Name="MainScrollViewer"
+                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                   CanContentScroll="True"
                   MouseMove="ScrollViewer_MouseMove"
                   MouseLeave="ScrollViewer_MouseLeave">
-        <Grid>
+
             <Canvas Width="{Binding MapData.Width}" Height="{Binding MapData.Height}" Background="LightGray"
                     MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
                     MouseMove="Canvas_MouseMove"
                     MouseLeftButtonUp="Canvas_MouseLeftButtonUp"
                     MouseLeave="Canvas_MouseLeave"
-                    Tag="{Binding DataContext, ElementName=RootControl}" SizeChanged="Canvas_SizeChanged">
+                    Tag="{Binding DataContext, ElementName=RootControl}" SizeChanged="Canvas_SizeChanged"
+                    MouseWheel="Canvas_MouseWheel">
+                <Canvas.LayoutTransform>
+                    <ScaleTransform ScaleX="{Binding Scale,ElementName=RootControl}" ScaleY="{Binding Scale,ElementName=RootControl}"/>
+                </Canvas.LayoutTransform>
                 <Canvas.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="選択クリア"
@@ -42,18 +49,8 @@
                       Y1="{Binding DrawingHelperLine.StartY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
                       X2="{Binding DrawingHelperLine.EndX,Converter={StaticResource PositionConverter},ConverterParameter=X}"
                       Y2="{Binding DrawingHelperLine.EndY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
-                      Stroke="Gray"
-                      StrokeThickness="3" >
-                    <Line.Style>
-                        <Style TargetType="Line">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsDrawingHelperLine}" Value="false">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Line.Style>
+                      Stroke="Gray" StrokeThickness="3" 
+                      Visibility="{Binding IsDrawingHelperLine,ElementName=RootControl,Converter={StaticResource BoolToVisibilityConverter}}">
                 </Line>
 
                 <ItemsControl ItemsSource="{Binding HelperLines}">
@@ -147,9 +144,12 @@
                                         <MenuItem Header="Create Nodes Between Intersections"
                                                   Command="{Binding PlacementTarget.Tag.CreateNodesBetweenCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="StartEndInterval"/>
-                                        <MenuItem Header="Create Nodes Between InterSection node"
+                                        <MenuItem Header="Create Nodes Between InterSection and Node"
                                                   Command="{Binding PlacementTarget.Tag.CreateNodesBetweenCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="StartInterval"/>
+                                        <MenuItem Header="Create Nodes Between Node and InterSection"
+                                                  Command="{Binding PlacementTarget.Tag.CreateNodesBetweenCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="EndInterval"/>
                                     </ContextMenu>
                                 </Ellipse.ContextMenu>
                             </Ellipse>
@@ -162,7 +162,10 @@
                         </Style>
                     </ItemsControl.ItemContainerStyle>
                 </ItemsControl>
+                <Polygon Points="{Binding AMRModel.AmrPoints}" Fill="LightBlue" Stroke="DarkBlue" StrokeThickness="2" Canvas.Left="0" Canvas.Top="0"
+                         Visibility="{Binding AMRModel.IsConnected,Converter={StaticResource BoolToVisibilityConverter}}"/>
             </Canvas>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+        <TextBlock x:Name="MousePositionText" Text="Mouse Position: " IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>
+    </Grid>
 </UserControl>

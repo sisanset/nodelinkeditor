@@ -1,5 +1,3 @@
-using System.Windows.Media;
-
 namespace NodeLinkEditor.Models
 {
     public class HelperLine

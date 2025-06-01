@@ -2,7 +2,8 @@ namespace NodeLinkEditor.Models
 {
     public enum EditMode
     {
-        NodeLink,
+        Node,
+        Link,
         HelperLine
     }
 }
