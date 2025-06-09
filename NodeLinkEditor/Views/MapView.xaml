@@ -19,6 +19,7 @@
         <converter:TaperedLineConverter x:Key="TaperedLineConverter"/>
         <converter:PositionConverter x:Key="PositionConverter"/>
         <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+        <converter:PointToRectangleConverter x:Key="PointToRectangleConverter"/>
     </UserControl.Resources>
     <Grid>
         <ScrollViewer x:Name="MainScrollViewer"
@@ -49,8 +50,8 @@
                       Y1="{Binding DrawingHelperLine.StartY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
                       X2="{Binding DrawingHelperLine.EndX,Converter={StaticResource PositionConverter},ConverterParameter=X}"
                       Y2="{Binding DrawingHelperLine.EndY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
-                      Stroke="Gray" StrokeThickness="3" 
-                      Visibility="{Binding IsDrawingHelperLine,ElementName=RootControl,Converter={StaticResource BoolToVisibilityConverter}}">
+                      Stroke="Gray" StrokeThickness="3"
+                      Visibility="{Binding IsDrawingHelperLine,Converter={StaticResource BoolToVisibilityConverter}}">
                 </Line>
 
                 <ItemsControl ItemsSource="{Binding HelperLines}">
@@ -126,7 +127,7 @@
                                      Tag="{Binding DataContext, ElementName=RootControl}"
                                      MouseLeftButtonDown="Ellipse_MouseLeftButtonDown"
                                      Stroke="{Binding IsStartNode, Converter={StaticResource BoolToColorConverter}, ConverterParameter=Blue}"
-                                     StrokeThickness="2">
+                                     StrokeThickness="2" MouseEnter="Ellipse_MouseEnter" MouseLeave="Ellipse_MouseLeave">
                                 <Ellipse.Fill>
                                     <MultiBinding Converter="{StaticResource SelectedToColorConverter}">
                                         <Binding Path="IsSelected"/>
@@ -150,6 +151,9 @@
                                         <MenuItem Header="Create Nodes Between Node and InterSection"
                                                   Command="{Binding PlacementTarget.Tag.CreateNodesBetweenCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="EndInterval"/>
+                                        <MenuItem Header="距離設定"
+                                                  Command="{Binding PlacementTarget.Tag.SetNodesDistanceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  />
                                     </ContextMenu>
                                 </Ellipse.ContextMenu>
                             </Ellipse>
@@ -162,8 +166,80 @@
                         </Style>
                     </ItemsControl.ItemContainerStyle>
                 </ItemsControl>
+
+                <ItemsControl ItemsSource="{Binding Nodes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       TextAlignment="Right"
+                                       Width="50"
+                                       Height="30"
+                                       FontSize="20"
+                                       Foreground="Black"
+                                       IsHitTestVisible="False"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style>
+                            <Setter Property="Canvas.Left" Value="{Binding X,Converter={StaticResource AdjNodePositionConverter},ConverterParameter='NX'}"/>
+                            <Setter Property="Canvas.Top" Value="{Binding Y,Converter={StaticResource AdjNodePositionConverter},ConverterParameter='NY'}"/>
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
+
                 <Polygon Points="{Binding AMRModel.AmrPoints}" Fill="LightBlue" Stroke="DarkBlue" StrokeThickness="2" Canvas.Left="0" Canvas.Top="0"
-                         Visibility="{Binding AMRModel.IsConnected,Converter={StaticResource BoolToVisibilityConverter}}"/>
+                         Tag="{Binding DataContext, ElementName=RootControl}"
+                         Visibility="{Binding AMRModel.IsConnected,Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Polygon.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Node作成"
+                                      Command="{Binding PlacementTarget.Tag.CreateNodeCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                      CommandParameter="{Binding AMRModel}"/>
+                        </ContextMenu>
+                    </Polygon.ContextMenu>
+                </Polygon>
+                <Rectangle Fill="Transparent" Stroke="DarkBlue" StrokeThickness="2"
+                           Visibility="{Binding IsRectangleDragging,ElementName=RootControl, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Rectangle.Width>
+                        <MultiBinding Converter="{StaticResource PointToRectangleConverter}" ConverterParameter="Width">
+                            <Binding Path="RectangleStartPoint" ElementName="RootControl"/>
+                            <Binding Path="RectangleEndPoint" ElementName="RootControl"/>
+                        </MultiBinding>
+                    </Rectangle.Width>
+                    <Rectangle.Height>
+                        <MultiBinding Converter="{StaticResource PointToRectangleConverter}" ConverterParameter="Height">
+                            <Binding Path="RectangleStartPoint" ElementName="RootControl"/>
+                            <Binding Path="RectangleEndPoint" ElementName="RootControl"/>
+                        </MultiBinding>
+                    </Rectangle.Height>
+                    <Rectangle.Style>
+                        <Style TargetType="Rectangle">
+                            <Setter Property="Canvas.Left" >
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource PointToRectangleConverter}" ConverterParameter="Left">
+                                        <Binding Path="RectangleStartPoint" ElementName="RootControl"/>
+                                        <Binding Path="RectangleEndPoint" ElementName="RootControl"/>
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Canvas.Top" >
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource PointToRectangleConverter}" ConverterParameter="Top">
+                                        <Binding Path="RectangleStartPoint" ElementName="RootControl"/>
+                                        <Binding Path="RectangleEndPoint" ElementName="RootControl"/>
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Rectangle.Style>
+                </Rectangle>
             </Canvas>
         </ScrollViewer>
         <TextBlock x:Name="MousePositionText" Text="Mouse Position: " IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>

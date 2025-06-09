@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using System.Runtime.CompilerServices;
 using NodeLinkEditor.Models;
 using System.Windows;
+using Microsoft.VisualBasic;
 
 namespace NodeLinkEditor.ViewModels
 {
@@ -44,37 +45,30 @@ namespace NodeLinkEditor.ViewModels
             get => _selectedNode;
             set
             {
-                if (_selectedNode != null)
-                { _selectedNode.IsSelected = false; }
                 _selectedNode = value;
-                if (_selectedNode != null)
-                { _selectedNode.IsSelected = true; }
                 OnPropertyChanged();
 
                 if (_selectedNode == null)
                 { return; }
-                SelectedLink = null;
+                ClearSelectedLinks();
                 SelectedHelperLine = null;
             }
         }
         public ObservableCollection<NodeViewModel> SelectedNodes { get; set; } = [];
 
+        public ObservableCollection<LinkViewModel> SelectedLinks { get; set; } = [];
         private LinkViewModel? _selectedLink;
         public LinkViewModel? SelectedLink
         {
             get => _selectedLink;
             set
             {
-                if (_selectedLink != null)
-                { _selectedLink.IsSelected = false; }
                 _selectedLink = value;
-                if (_selectedLink != null)
-                { _selectedLink.IsSelected = true; }
                 OnPropertyChanged();
 
                 if (_selectedLink == null)
                 { return; }
-                SelectedNode = null;
+                ClearSelectedNodes();
                 SelectedHelperLine = null;
             }
         }
@@ -147,9 +141,15 @@ namespace NodeLinkEditor.ViewModels
 
                 if (_selectedHelperLine == null)
                 { return; }
-                SelectedNode = null;
-                SelectedLink = null;
+                ClearSelectedNodes();
+                ClearSelectedLinks();
             }
+        }
+        private bool _isDrawingHelperLine = false;
+        public bool IsDrawingHelperLine
+        {
+            get => _isDrawingHelperLine;
+            set { _isDrawingHelperLine = value; OnPropertyChanged(); }
         }
         private HelperLineViewModel _DrawingHelperLine = new();
         public HelperLineViewModel DrawingHelperLine
@@ -189,19 +189,74 @@ namespace NodeLinkEditor.ViewModels
         public ICommand MoveHelperLineCommand { get; }
         public ICommand CreateNodeAtIntersectionCommand { get; }
         public ICommand CreateNodesBetweenCommand { get; }
+        public ICommand SetNodesDistanceCommand { get; }
+
         public ICommand ConnectMQTTCommand { get; }
         public ICommand DisconnectMQTTCommand { get; }
 
         public void ClearSelection()
         {
-            SelectedNode = null;
-            SelectedLink = null;
-            foreach (var node in SelectedNodes.Where(n => n.IsReferenced))
-            { node.IsReferenced = false; }
-            SelectedNodes.Clear();
+            ClearSelectedLinks();
+            ClearSelectedNodes();
             StartNode = null;
             EndNode = null;
             SelectedHelperLine = null;
+            IsDrawingHelperLine = false;
+        }
+        public void AddSelectedLink(LinkViewModel link)
+        {
+            if (link.IsSelected) { return; }
+            link.IsSelected = true;
+            SelectedLinks.Add(link);
+            if (SelectedLinks.Count == 1)
+            { SelectedLink = new LinkViewModel(link.GetLinkCopy(), link.StartNode, link.EndNode); }
+            else
+            { SelectedLink = new LinkViewModel(link.StartNode, link.EndNode); }
+        }
+        public void RemoveSelectedLink(LinkViewModel link)
+        {
+            if (!link.IsSelected) { return; }
+            link.IsSelected = false;
+            SelectedLinks.Remove(link);
+            if (SelectedLinks.Count == 0)
+            { SelectedLink = null; }
+            else if (SelectedLinks.Count == 1)
+            { SelectedLink = new LinkViewModel(SelectedLinks[0].GetLinkCopy(), SelectedLinks[0].StartNode, SelectedLinks[0].EndNode); }
+        }
+        public void ClearSelectedLinks()
+        {
+            foreach (var link in SelectedLinks)
+            { link.IsSelected = false; }
+            SelectedLinks.Clear();
+            SelectedLink = null;
+        }
+
+        public void AddSelectedNode(NodeViewModel node)
+        {
+            if (node.IsSelected) { return; }
+            node.IsSelected = true;
+            SelectedNodes.Add(node);
+            if (SelectedNodes.Count == 1)
+            { SelectedNode = new NodeViewModel(node.GetNodeCopy()); }
+            else
+            { SelectedNode = new NodeViewModel(0, 0, false); }
+        }
+        public void RemoveSelectedNode(NodeViewModel node)
+        {
+            if (!node.IsSelected) { return; }
+            node.IsSelected = false;
+            SelectedNodes.Remove(node);
+            if (SelectedNodes.Count == 0)
+            { SelectedNode = null; }
+            else if (SelectedNodes.Count == 1)
+            { SelectedNode = new NodeViewModel(SelectedNodes[0].GetNodeCopy()); }
+        }
+        public void ClearSelectedNodes()
+        {
+            foreach (var node in SelectedNodes)
+            { node.IsSelected = false; }
+            SelectedNodes.Clear();
+            SelectedNode = null;
         }
 
         public MapEditorViewModel()
@@ -226,18 +281,25 @@ namespace NodeLinkEditor.ViewModels
 
             AddAssociatedCommand = new Others.RelayCommand((_) =>
             {
-                if (SelectedNode == null) { return; }
-                foreach (var node in SelectedNodes)
+                for (var i = 0; i < SelectedNodes.Count; i++)
                 {
-                    if (node == SelectedNode) { continue; }
-                    if (SelectedNode.AssociatedNodes.Contains(node.ID)) { continue; }
-                    SelectedNode.AssociatedNodes.Add(node.ID);
+                    for (var j = i + 1; j < SelectedNodes.Count; j++)
+                    {
+                        if (!SelectedNodes[i].AssociatedNodes.Contains(SelectedNodes[j].Name))
+                        { SelectedNodes[i].AssociatedNodes.Add(SelectedNodes[j].Name); }
+                        if (!SelectedNodes[j].AssociatedNodes.Contains(SelectedNodes[i].Name))
+                        { SelectedNodes[j].AssociatedNodes.Add(SelectedNodes[i].Name); }
+                    }
                 }
             });
-            RemoveAssociatedCommand = new Others.RelayCommand((nodeId) =>
+            RemoveAssociatedCommand = new Others.RelayCommand((nodeName) =>
             {
-                if (nodeId is not Guid) { return; }
-                SelectedNode?.AssociatedNodes.Remove((Guid)nodeId);
+                if (nodeName is not string name) { return; }
+                if (SelectedNodes.Count != 1) { return; }
+                var node = SelectedNodes[0];
+                node.AssociatedNodes.Remove(name);
+                Nodes.SingleOrDefault(n => n.Name == name)?.AssociatedNodes.Remove(node.Name);
+                SelectedNode = new NodeViewModel(node.GetNodeCopy());
             });
 
             ClearSelectionCommand = new Others.RelayCommand((_) => ClearSelection());
@@ -261,6 +323,7 @@ namespace NodeLinkEditor.ViewModels
                     }
                 },
                 CanCreateNodesBetween);
+            SetNodesDistanceCommand = new Others.RelayCommand(SetNodesDistance, CanSetNodesDistance);
 
             MqttClient = new AMRMqttClient();
             MqttClient.SetMessageReceivedEvent((x, y, z) => Application.Current.Dispatcher.Invoke(() => AMRModel.SetAMR(x, y, z)));
@@ -295,11 +358,15 @@ namespace NodeLinkEditor.ViewModels
         {
             if (parameter is NodeViewModel node)
             {
-                SelectedNodes.Remove(node);
-                if (SelectedNode == node)
-                { SelectedNode = null; }
-                if (Links.Any(link => (link.StartNode == node || link.EndNode == node) && link == SelectedLink))
-                { SelectedLink = null; }
+                RemoveSelectedNode(node);
+                foreach (var l in SelectedLinks.Where(link => link.StartNode == node || link.EndNode == node))
+                { RemoveSelectedLink(l); }
+                foreach (var n in Nodes.Where(n => n.AssociatedNodes.Contains(node.Name)))
+                {
+                    n.AssociatedNodes.Remove(node.Name);
+                    if (SelectedNodes.Count == 1 && n.Name == SelectedNode?.Name)
+                    { SelectedNode = new NodeViewModel(n.GetNodeCopy()); }
+                }
                 if (StartNode == node)
                 { StartNode = null; }
                 _undoRedoManager.Execute(new RemoveNodeCommand(Nodes, node, Links));
@@ -310,8 +377,7 @@ namespace NodeLinkEditor.ViewModels
         {
             if (parameter is LinkViewModel link)
             {
-                if (SelectedLink == link)
-                { SelectedLink = null; }
+                RemoveSelectedLink(link);
                 _undoRedoManager.Execute(new RemoveCommand<LinkViewModel>(Links, link));
             }
         }
@@ -323,8 +389,13 @@ namespace NodeLinkEditor.ViewModels
             {
                 _undoRedoManager.Execute(new AddCommand<NodeViewModel>(Nodes, new NodeViewModel(point.X, point.Y)));
             }
+            if (parameter is AMRViewModel amrModel)
+            {
+                _undoRedoManager.Execute(new AddCommand<NodeViewModel>(Nodes, new NodeViewModel(amrModel.X, amrModel.Y)));
+                Nodes.Last().AttributeOptions.First(a => a.Attribute == NodeAttribute.Working).IsSelected = true;
+            }
         }
-        private bool CanCreateNode(object? parameter) => parameter is System.Windows.Point;
+        private bool CanCreateNode(object? parameter) => parameter is System.Windows.Point || parameter is AMRViewModel;
 
         private void CreateLink(object? parameter)
         {
@@ -490,8 +561,8 @@ namespace NodeLinkEditor.ViewModels
                         Math.Abs(intersections[i].Y - intersections[j].Y) < 3
                         )
                     {
-                        intersections[i].AssociatedNodes.Add(intersections[j].ID);
-                        intersections[j].AssociatedNodes.Add(intersections[i].ID);
+                        intersections[i].AssociatedNodes.Add(intersections[j].Name);
+                        intersections[j].AssociatedNodes.Add(intersections[i].Name);
                     }
                 }
 
@@ -577,5 +648,30 @@ namespace NodeLinkEditor.ViewModels
             foreach (var link in newLinks)
             { _undoRedoManager.Execute(new AddCommand<LinkViewModel>(Links, link)); }
         }
+        private void SetNodesDistance(object? parameter)
+        {
+            if (SelectedNodes.Count != 2) { return; }
+            string? input = Interaction.InputBox("ノード間隔を入力してください:", "ノード間隔設定", NodeInterval.ToString());
+            if (string.IsNullOrEmpty(input))
+            {
+                return;
+            }
+
+            if (double.TryParse(input, out double distance))
+            {
+                double diffX = SelectedNodes[1].X - SelectedNodes[0].X;
+                double diffY = SelectedNodes[1].Y - SelectedNodes[0].Y;
+                double currentDistance = Math.Sqrt(diffX * diffX + diffY * diffY);
+                double newX = SelectedNodes[0].X + diffX * (distance / currentDistance);
+                double newY = SelectedNodes[0].Y + diffY * (distance / currentDistance);
+                MoveNode((SelectedNodes[1], newX, newY));
+            }
+            else
+            {
+                MessageBox.Show("無効な入力です。数値を入力してください。", "エラー");
+            }
+        }
+        private bool CanSetNodesDistance(object? parameter) => SelectedNodes.Count == 2;
+
     }
 }

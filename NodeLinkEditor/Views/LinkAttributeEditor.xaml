@@ -33,19 +33,19 @@
         <TextBlock Text="E->S:"  Grid.Row="2" Grid.Column="0" Margin="25,0,0,0"/>
         <TextBox Text="{Binding SelectedLink.EndToStartCost}" Name="TextBoxEndToStartCost" Grid.Row="2" Grid.Column="1" LostFocus="TextBoxCost_LostFocus"/>
 
-        <CheckBox Content="双方向通行" IsChecked="{Binding SelectedLink.IsTwoWay}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="25,5,0,0"/>
+        <CheckBox Content="双方向通行" IsChecked="{Binding SelectedLink.IsTwoWay}" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Margin="25,5,0,0" Click="IsTwoWayCheckBox_Click"/>
 
         <TextBlock Text="属性一覧:" FontWeight="Bold" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
         <ItemsControl ItemsSource="{Binding SelectedLink.AttributeOptions}" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <CheckBox Content="{Binding Attribute}"
-                              IsChecked="{Binding IsSelected}"/>
+                              IsChecked="{Binding IsSelected}" Click="AttributeCheckBox_Click" />
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Text="{Binding SelectedLink.StartNode.ID, StringFormat='StartNode : {0}'}" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
-        <TextBlock Text="{Binding SelectedLink.EndNode.ID, StringFormat='EndNode   : {0}'}" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
+        <TextBlock Text="{Binding SelectedLink.StartNode.Name, StringFormat='StartNode : {0}'}" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
+        <TextBlock Text="{Binding SelectedLink.EndNode.Name, StringFormat='EndNode   : {0}'}" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
         <Button Content="ノード入れ替え" Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" Click="SwapNodes_Click"/>
     </Grid>
 </UserControl>

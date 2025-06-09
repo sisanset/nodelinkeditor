@@ -9,8 +9,19 @@ namespace NodeLinkEditor.ViewModels
 {
     public class LinkViewModel : INotifyPropertyChanged
     {
-
+        private static string CreateName(NodeViewModel startNode, NodeViewModel endNode) => $"{startNode.Name}_to_{endNode.Name}";
+        public void SwapNodes()
+        {
+            (StartNode, EndNode) = (EndNode, StartNode);
+            UpdateName();
+        }
+        private void UpdateName()
+        {
+            Name = CreateName(StartNode, EndNode);
+            OnPropertyChanged(nameof(Name));
+        }
         public Guid ID { get; set; }
+        public string Name { get; set; } = "";
         public ObservableCollection<AttributeOption<LinkAttribute>> AttributeOptions { get; }
 
         private double _startToEndCost = 1.0;
@@ -80,6 +91,7 @@ namespace NodeLinkEditor.ViewModels
         public LinkViewModel(Link link, NodeViewModel start, NodeViewModel end)
         {
             ID = link.ID;
+            Name = link.Name;
             var linkAttributes = new List<LinkAttribute>(link.Attributes.Distinct());
             AttributeOptions = [.. Enum.GetValues<LinkAttribute>().Cast<LinkAttribute>().Select(attr =>
                 {
@@ -94,7 +106,7 @@ namespace NodeLinkEditor.ViewModels
             _endNode = end;
             IsTwoWay = link.IsTwoWay;
         }
-        public LinkViewModel(NodeViewModel start, NodeViewModel end) : this(new Link(), start, end)
+        public LinkViewModel(NodeViewModel start, NodeViewModel end) : this(new Link() { Name = CreateName(start, end) }, start, end)
         {
         }
         public Link GetLinkCopy()
@@ -102,6 +114,7 @@ namespace NodeLinkEditor.ViewModels
             return new Link
             {
                 ID = ID,
+                Name = Name,
                 StartNodeID = StartNode.ID,
                 EndNodeID = EndNode.ID,
                 Attributes = [.. AttributeOptions.Where(a => a.IsSelected).Select(a => a.Attribute)],

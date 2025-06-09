@@ -16,6 +16,10 @@ namespace NodeLinkEditor.Converters
                     { return CoordConv.CoordXToPixelX(doubleValue) - Adj; }
                     else if (axis == "Y")
                     { return CoordConv.CoordYToPixelY(doubleValue) - Adj; }
+                    if (axis == "NX")
+                    { return CoordConv.CoordXToPixelX(doubleValue) - 55 - Adj; }
+                    else if (axis == "NY")
+                    { return CoordConv.CoordYToPixelY(doubleValue) - 1.5 * Adj; }
                 }
                 return doubleValue - Adj;
             }

@@ -14,6 +14,7 @@ namespace NodeLinkEditor.Models
     public class Link
     {
         public Guid ID { get; init; } = Guid.CreateVersion7();
+        public string Name { get; set; } = "";
         public Guid StartNodeID { get; set; }
         public Guid EndNodeID { get; set; }
         public List<LinkAttribute> Attributes { get; set; } = [];

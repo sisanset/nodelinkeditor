@@ -15,11 +15,23 @@ namespace NodeLinkEditor.Views
 {
     public partial class MapView : UserControl, INotifyPropertyChanged
     {
-        private bool _isDrawingHelperLine = false;
-        public bool IsDrawingHelperLine
+        private Point _rectangleStartPoint;
+        public Point RectangleStartPoint
         {
-            get => _isDrawingHelperLine;
-            set { _isDrawingHelperLine = value; OnPropertyChanged(); }
+            get => _rectangleStartPoint;
+            set { _rectangleStartPoint = value; OnPropertyChanged(); }
+        }
+        private Point _rectangleEndPoint;
+        public Point RectangleEndPoint
+        {
+            get => _rectangleEndPoint;
+            set { _rectangleEndPoint = value; OnPropertyChanged(); }
+        }
+        private bool _isRectangleDragging = false;
+        public bool IsRectangleDragging
+        {
+            get => _isRectangleDragging;
+            set { _isRectangleDragging = value; OnPropertyChanged(); }
         }
 
         private double _scale = 1.0;
@@ -82,8 +94,9 @@ namespace NodeLinkEditor.Views
 
         private void ScrollTimer_Tick(object? sender, EventArgs e)
         {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
             if (!_isMouseInside) return;
-            if (!IsDrawingHelperLine && _draggedNode == null) return;
+            if (!viewModel.IsDrawingHelperLine && _draggedNode == null && !IsRectangleDragging) { return; }
 
             var scrollViewer = MainScrollViewer;
             if (scrollViewer == null) return;
@@ -125,12 +138,25 @@ namespace NodeLinkEditor.Views
             switch (viewModel.SelectedMode)
             {
                 case Models.EditMode.Node:
-                    viewModel.CreateNodeCommand.Execute(point);
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        IsRectangleDragging = true;
+                        UpdateRectangle(point, point);
+                    }
+                    else
+                    { viewModel.CreateNodeCommand.Execute(point); }
+                    break;
+                case Models.EditMode.Link:
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        IsRectangleDragging = true;
+                        UpdateRectangle(point, point);
+                    }
                     break;
                 case Models.EditMode.HelperLine:
-                    if (IsDrawingHelperLine)
+                    if (viewModel.IsDrawingHelperLine)
                     {
-                        IsDrawingHelperLine = false;
+                        viewModel.IsDrawingHelperLine = false;
                         viewModel.DrawingHelperLine.EndX = point.X;
                         viewModel.DrawingHelperLine.EndY = point.Y;
                         viewModel.CreateHelperLineCommand.Execute(viewModel.DrawingHelperLine);
@@ -144,7 +170,7 @@ namespace NodeLinkEditor.Views
                             EndX = point.X,
                             EndY = point.Y,
                         });
-                        IsDrawingHelperLine = true;
+                        viewModel.IsDrawingHelperLine = true;
                     }
                     break;
                 default:
@@ -159,38 +185,147 @@ namespace NodeLinkEditor.Views
             _isTimerElapsed = true;
         }
 
+
+        private Point? GetClosestPointFromLines(Point point, MapEditorViewModel viewModel)
+        {
+            double threshold = 30.0;
+            Point? closestPoint = null;
+            double minDistance = double.MaxValue;
+            foreach (var line in viewModel.HelperLines)
+            {
+                var cp = GetClosestPointFromLine(point, line);
+                var pixelDiffX = CoordConv.CoordXToPixelX(cp.X) - CoordConv.CoordXToPixelX(point.X);
+                var pixelDiffY = CoordConv.CoordYToPixelY(cp.Y) - CoordConv.CoordYToPixelY(point.Y);
+                var powDist = Math.Pow(pixelDiffX, 2) + Math.Pow(pixelDiffY, 2);
+                if (powDist < minDistance)
+                {
+                    minDistance = powDist;
+                    closestPoint = cp;
+                }
+            }
+            if (closestPoint == null || threshold * threshold < minDistance)
+            { return null; }
+            return closestPoint;
+        }
+        private Point GetClosestPointFromLine(Point p, HelperLineViewModel line)
+        {
+            var spX = p.X - line.StartX;
+            var spY = p.Y - line.StartY;
+            var seX = line.EndX - line.StartX;
+            var seY = line.EndY - line.StartY;
+            var esX = line.StartX - line.EndX;
+            var esY = line.StartY - line.EndY;
+            var epX = p.X - line.EndX;
+            var epY = p.Y - line.EndY;
+            if (spX * seX + spY * seY < 0)
+            { return new Point(line.StartX, line.StartY); }
+            if (epX * esX + epY * esY < 0)
+            { return new Point(line.EndX, line.EndY); }
+            var seNorm = Math.Sqrt(seX * seX + seY * seY);
+            var cpNorm = (spX * seX + spY * seY) / seNorm;
+            var cpX = line.StartX + seX * cpNorm / seNorm;
+            var cpY = line.StartY + seY * cpNorm / seNorm;
+            return new Point(cpX, cpY);
+        }
+
         private void Canvas_MouseMove(object sender, MouseEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel)
-            {
-                Point point = GetCoordFromPixel(sender, e);
-                MousePositionText.Text = $"Mouse Position: X = {point.X:N3}, Y = {point.Y:N3}";
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
 
-                if (e.LeftButton == MouseButtonState.Pressed && _draggedNode != null && _isTimerElapsed)
+            Point point = GetCoordFromPixel(sender, e);
+            MousePositionText.Text = $"Mouse Position: X = {point.X:N3}, Y = {point.Y:N3}";
+
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                if (_draggedNode != null && _isTimerElapsed)
                 {
                     _draggedNode.X = point.X;
                     _draggedNode.Y = point.Y;
-                    // if point.XがCanvasの範囲外->MouseLeftButtonUp<-これをやると中途半端に外に出た場合帰ってこれなくなるのでやらない
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        var closestPoint = GetClosestPointFromLines(point, viewModel);
+                        if (closestPoint != null)
+                        {
+                            _draggedNode.X = closestPoint.Value.X;
+                            _draggedNode.Y = closestPoint.Value.Y;
+                        }
+                    }
+                    if (viewModel.SelectedNodes.Count == 1 && viewModel.SelectedNode?.ID == _draggedNode.ID)
+                    {
+                        viewModel.SelectedNode.X = _draggedNode.X;
+                        viewModel.SelectedNode.Y = _draggedNode.Y;
+                    }
                 }
-                if (e.LeftButton != MouseButtonState.Pressed && viewModel.SelectedMode == EditMode.HelperLine && IsDrawingHelperLine)
+                if (IsRectangleDragging)
+                { UpdateRectangle(_rectangleStartPoint, point); }
+            }
+            else
+            {
+                if (viewModel.SelectedMode == EditMode.HelperLine && viewModel.IsDrawingHelperLine)
                 {
                     viewModel.DrawingHelperLine.EndX = point.X;
                     viewModel.DrawingHelperLine.EndY = point.Y;
                 }
+                if (IsRectangleDragging)
+                {
+                    IsRectangleDragging = false;
+                    SelectInsideRectangle();
+                }
             }
+        }
+        private void SelectInsideRectangle()
+        {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            var rect = new Rect(
+                Math.Min(_rectangleStartPoint.X, _rectangleEndPoint.X),
+                Math.Min(_rectangleStartPoint.Y, _rectangleEndPoint.Y),
+                Math.Abs(_rectangleStartPoint.X - _rectangleEndPoint.X),
+                Math.Abs(_rectangleStartPoint.Y - _rectangleEndPoint.Y));
+
+            var nodes = viewModel.Nodes.Where(n => rect.Contains(n.Point)).ToList();
+            if (EditMode.Node == viewModel.SelectedMode)
+            { nodes.ForEach(n => viewModel.AddSelectedNode(n)); }
+            else if (EditMode.Link == viewModel.SelectedMode)
+            {
+                foreach (var l in viewModel.Links.Where(l => nodes.Contains(l.StartNode) && nodes.Contains(l.EndNode)))
+                { viewModel.AddSelectedLink(l); }
+            }
+        }
+        private void UpdateRectangle(Point startPoint, Point endPoint)
+        {
+            RectangleStartPoint = startPoint;
+            RectangleEndPoint = endPoint;
         }
 
         private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             _dragTimer.Stop();
-            if (DataContext is MapEditorViewModel viewModel && _draggedNode != null && _isTimerElapsed)
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            Point point = GetCoordFromPixel(sender, e);
+            if (_draggedNode != null && _isTimerElapsed)
             {
-                Point point = GetCoordFromPixel(sender, e);
-                viewModel.MoveNodeCommand.Execute((_draggedNode, point.X, point.Y, _dragStartPoint.X, _dragStartPoint.Y));
+                _draggedNode.X = point.X;
+                _draggedNode.Y = point.Y;
+                if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                {
+                    var closestPoint = GetClosestPointFromLines(point, viewModel);
+                    if (closestPoint != null)
+                    {
+                        _draggedNode.X = closestPoint.Value.X;
+                        _draggedNode.Y = closestPoint.Value.Y;
+                    }
+                }
+                viewModel.MoveNodeCommand.Execute((_draggedNode, _draggedNode.X, _draggedNode.Y, _dragStartPoint.X, _dragStartPoint.Y));
             }
             _draggedNode = null;
             _isTimerElapsed = false;
+            if (IsRectangleDragging)
+            {
+                IsRectangleDragging = false;
+                SelectInsideRectangle();
+            }
         }
+
         private Point GetCoordFromPixel(object sender, MouseEventArgs e) => CoordConv.PixelToCoord(e.GetPosition((Canvas)sender));
 
         private void Canvas_MouseLeave(object sender, MouseEventArgs e)
@@ -200,40 +335,51 @@ namespace NodeLinkEditor.Views
 
         private void Link_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel && sender is Path path)
+            if (DataContext is MapEditorViewModel viewModel && sender is Path path && path.DataContext is LinkViewModel link)
             {
                 e.Handled = true;
-                viewModel.SelectedLink = path.DataContext as LinkViewModel;
+                if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                {
+                    // ctl押しながらの場合は追加・削除
+                    // 選択されたものを削除
+                    if (link.IsSelected)
+                    { viewModel.RemoveSelectedLink(link); }
+                    else//追加
+                    { viewModel.AddSelectedLink(link); }
+                    return;
+                }
+                // ctl無しの場合は一つのみ
+                if (link.IsSelected)
+                { return; }
+                viewModel.ClearSelectedLinks();
+                viewModel.AddSelectedLink(link);
             }
         }
 
         private void Ellipse_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var viewModel = DataContext as MapEditorViewModel;
-            var node = (sender as Ellipse)?.DataContext as NodeViewModel;
-
-            if (viewModel == null || node == null)
-            { return; }
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (sender is not Ellipse || ((Ellipse)sender).DataContext is not NodeViewModel node) { return; }
 
             e.Handled = true;
 
             // 複数Node選択
             if (Keyboard.IsKeyDown(Key.LeftCtrl))
             {
-                if (viewModel.SelectedNodes.Contains(node))
-                {
-                    viewModel.SelectedNodes.Remove(node);
-                    node.IsReferenced = false;
-                }
+                if (node.IsSelected)
+                { viewModel.RemoveSelectedNode(node); }
                 else
+                { viewModel.AddSelectedNode(node); }
+            }
+            else
+            {
+                if (!node.IsSelected)
                 {
-                    viewModel.SelectedNodes.Add(node);
-                    node.IsReferenced = true;
+                    viewModel.ClearSelectedNodes();
+                    viewModel.AddSelectedNode(node);
                 }
-                return;
             }
 
-            viewModel.SelectedNode = node;
             // Line作成
             if (viewModel.SelectedMode == EditMode.Link)
             {
@@ -265,6 +411,27 @@ namespace NodeLinkEditor.Views
             _dragTimer.Stop();
             _dragTimer.Start();
         }
+        private void Ellipse_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (sender is not Ellipse || ((Ellipse)sender).DataContext is not NodeViewModel node) { return; }
+            if (node.AssociatedNodes.Count == 0) { return; }
+            node.IsReferenced = true;
+            foreach (var a in node.AssociatedNodes)
+            {
+                var associatedNode = viewModel.Nodes.FirstOrDefault(n => n.Name == a);
+                if (associatedNode != null)
+                { associatedNode.IsReferenced = true; }
+            }
+        }
+
+        private void Ellipse_MouseLeave(object sender, MouseEventArgs e)
+        {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            foreach (var n in viewModel.Nodes)
+            { n.IsReferenced = false; }
+        }
+
 
         private void Canvas_SizeChanged(object sender, SizeChangedEventArgs e)
         {

@@ -9,7 +9,27 @@ namespace NodeLinkEditor.ViewModels
 {
     public class NodeViewModel : INotifyPropertyChanged
     {
+        private static int NodeIdx = 0;
+        private static HashSet<int> NodeNameSet = new HashSet<int>();
+        public static string GetNodeName(bool isIdx)
+        {
+            if (!isIdx) { return ""; }
+            if (NodeNameSet.Contains(NodeIdx))
+            {
+                NodeIdx++;
+                return GetNodeName(isIdx);
+            }
+            NodeNameSet.Add(NodeIdx);
+            return $"{NodeIdx++}";
+        }
+        public static void RegisterNodename(string name)
+        {
+            if (double.TryParse(name, out double idx))
+            { NodeNameSet.Add((int)idx); }
+        }
+
         public Guid ID { get; init; }
+        public string Name { get; set; } = "";
         public double _x;
         public double X
         {
@@ -36,7 +56,7 @@ namespace NodeLinkEditor.ViewModels
         {
             get => new(X, Y);
         }
-        public ObservableCollection<Guid> AssociatedNodes { get; set; } = [];
+        public ObservableCollection<string> AssociatedNodes { get; set; } = [];
         public ObservableCollection<AttributeOption<NodeAttribute>> AttributeOptions { get; }
 
         private bool _isSelected = false;
@@ -61,6 +81,8 @@ namespace NodeLinkEditor.ViewModels
         public NodeViewModel(Node node)
         {
             ID = node.ID;
+            Name = node.Name;
+            RegisterNodename(Name);
             _x = node.X;
             _y = node.Y;
             var nodeAttributes = new List<NodeAttribute>(node.Attributes.Distinct());
@@ -73,7 +95,7 @@ namespace NodeLinkEditor.ViewModels
                     return option;
                 })];
         }
-        public NodeViewModel(double x, double y) : this(new Node() { X = x, Y = y })
+        public NodeViewModel(double x, double y, bool getNodeName = true) : this(new Node() { X = x, Y = y, Name = GetNodeName(getNodeName) })
         {
         }
         public Node GetNodeCopy()
@@ -81,6 +103,7 @@ namespace NodeLinkEditor.ViewModels
             return new Node
             {
                 ID = ID,
+                Name = Name,
                 X = X,
                 Y = Y,
                 AssociatedNodes = [.. AssociatedNodes],

@@ -12,24 +12,31 @@ namespace NodeLinkEditor.Views
 
         private void TextBoxNodePos_LostFocus(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel)
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (viewModel.SelectedNodes.Count != 1) { return; }
+            var textBox = sender as TextBox;
+            if (textBox == null || viewModel.SelectedNode == null) { return; }
+            string text = textBox.Text;
+            string name = textBox.Name;
+            if (double.TryParse(text, out double value))
             {
-                var textBox = sender as TextBox;
-                if (textBox == null || viewModel.SelectedNode == null)
-                { return; }
-                string text = textBox.Text;
-                string name = textBox.Name;
-                if (double.TryParse(text, out double value))
-                {
-                    if (textBox.Name == "TextBoxNodePosX")
-                    {
-                        viewModel.MoveNodeCommand.Execute((viewModel.SelectedNode, value, viewModel.SelectedNode.Y));
-                    }
-                    else if (textBox.Name == "TextBoxNodePosY")
-                    {
-                        viewModel.MoveNodeCommand.Execute((viewModel.SelectedNode, viewModel.SelectedNode.X, value));
-                    }
-                }
+                var node = viewModel.SelectedNodes[0];
+                if (textBox.Name == "TextBoxNodePosX")
+                { viewModel.MoveNodeCommand.Execute((node, value, node.Y)); }
+                else if (textBox.Name == "TextBoxNodePosY")
+                { viewModel.MoveNodeCommand.Execute((node, node.X, value)); }
+                viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNode.GetNodeCopy());
+            }
+        }
+
+        private void AttributeCheckBox_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (viewModel.SelectedNode == null) { return; }
+            foreach (var node in viewModel.SelectedNodes)
+            {
+                foreach (var att in viewModel.SelectedNode.AttributeOptions.Zip(node.AttributeOptions, (sa, la) => (sa, la)))
+                { att.la.IsSelected = att.sa.IsSelected; }
             }
         }
     }

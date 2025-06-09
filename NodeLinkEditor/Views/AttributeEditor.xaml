@@ -20,11 +20,11 @@
             <RowDefinition Height="20"/>
             <RowDefinition Height="20"/>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="30"/>
+            <RowDefinition Height="20"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="100"/>
+            <RowDefinition Height="95"/>
             <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <TextBlock Text="座標値[m]:" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,0,0" />
@@ -33,22 +33,22 @@
         <TextBlock Text="Y:" Grid.Row="2" Grid.Column="0" Margin="40,0,0,0"/>
         <TextBox Text="{Binding SelectedNode.Y}" Name="TextBoxNodePosY"  Grid.Row="2" Grid.Column="1" LostFocus="TextBoxNodePos_LostFocus" />
 
-        <TextBlock Text="属性一覧:" FontWeight="Bold" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,10,0,0" />
-        <ItemsControl ItemsSource="{Binding SelectedNode.AttributeOptions}" Height="80" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
+        <TextBlock Text="属性一覧:" FontWeight="Bold" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,5,0,0" />
+        <ItemsControl ItemsSource="{Binding SelectedNode.AttributeOptions}" Height="95" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <CheckBox Content="{Binding Attribute}"
-                              IsChecked="{Binding IsSelected}"/>
+                              IsChecked="{Binding IsSelected}" Click="AttributeCheckBox_Click"/>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
         <TextBlock Text="関連ノード:" FontWeight="Bold" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,0,0" />
-        <ListBox ItemsSource="{Binding SelectedNode.AssociatedNodes}" Height="100" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
+        <ListBox ItemsSource="{Binding SelectedNode.AssociatedNodes}" Height="95" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="15,0,0,0">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding}" Width="110"/>
+                        <TextBlock Text="{Binding}" Width="60"/>
                         <Button Content="削除"
                             Command="{Binding DataContext.RemoveAssociatedCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                             CommandParameter="{Binding}"/>

@@ -50,6 +50,9 @@ namespace NodeLinkEditor.ViewModels
         {
             var pixelX = CoordConv.CoordXToPixelX(x);
             var pixelY = CoordConv.CoordYToPixelY(y);
+            X = x;
+            Y = y;
+            Yaw = yaw;
             AmrPoints = [
                     new Point(pixelX + 15 * Math.Cos(yaw) , pixelY - 15 * Math.Sin(yaw)),
                         new Point(pixelX + 10 * Math.Cos(2 * Math.PI/3.0+ yaw), pixelY - 10 * Math.Sin(2 * Math.PI / 3.0 + yaw )),
