@@ -45,8 +45,8 @@ namespace NodeLinkEditor.Views
             }
         }
         private double _zoomFactor = 1.1;
-        private double _minScale = 0.5;
-        private double _maxScale = 2.0;
+        private double _minScale = 0.25;
+        private double _maxScale = 5.0;
 
         private NodeViewModel? _draggedNode;
         private Point _dragStartPoint;

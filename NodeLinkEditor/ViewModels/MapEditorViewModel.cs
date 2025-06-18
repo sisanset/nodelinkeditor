@@ -185,6 +185,7 @@ namespace NodeLinkEditor.ViewModels
         public ICommand RemoveAssociatedCommand { get; }
         public ICommand ClearSelectionCommand { get; }
         public ICommand CreateHelperLineCommand { get; }
+        public ICommand DuplicateHelperLineCommand { get; }
         public ICommand RemoveHelperLineCommand { get; }
         public ICommand MoveHelperLineCommand { get; }
         public ICommand CreateNodeAtIntersectionCommand { get; }
@@ -275,6 +276,7 @@ namespace NodeLinkEditor.ViewModels
             RemoveLinkCommand = new Others.RelayCommand(RemoveLink, CanRemoveLink);
             MoveNodeCommand = new Others.RelayCommand(MoveNode);
             CreateHelperLineCommand = new Others.RelayCommand(CreateHelperLine);
+            DuplicateHelperLineCommand = new Others.RelayCommand(DuplicateHelperLine);
             RemoveHelperLineCommand = new Others.RelayCommand(RemoveHelperLine);
             MoveHelperLineCommand = new Others.RelayCommand(MoveHelperLine, CanMoveHelperLine);
             CreateNodeAtIntersectionCommand = new Others.RelayCommand(CreateNodeAtIntersection, CanCreateNodeAtIntersection);
@@ -516,6 +518,15 @@ namespace NodeLinkEditor.ViewModels
                 _undoRedoManager.Execute(new AddCommand<HelperLineViewModel>(HelperLines, line));
             }
         }
+        private void DuplicateHelperLine(object? parameter)
+        {
+            if (parameter is HelperLineViewModel line)
+            {
+                var newLine = new HelperLineViewModel(line.GetHelperLineCopy());
+                _undoRedoManager.Execute(new AddCommand<HelperLineViewModel>(HelperLines, newLine));
+            }
+        }
+
         private void RemoveHelperLine(object? parameter)
         {
             if (parameter is HelperLineViewModel line)

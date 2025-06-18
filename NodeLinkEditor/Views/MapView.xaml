@@ -50,7 +50,7 @@
                       Y1="{Binding DrawingHelperLine.StartY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
                       X2="{Binding DrawingHelperLine.EndX,Converter={StaticResource PositionConverter},ConverterParameter=X}"
                       Y2="{Binding DrawingHelperLine.EndY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
-                      Stroke="Gray" StrokeThickness="3"
+                      Stroke="Green" StrokeThickness="0.5"
                       Visibility="{Binding IsDrawingHelperLine,Converter={StaticResource BoolToVisibilityConverter}}">
                 </Line>
 
@@ -66,7 +66,7 @@
                                   Y1="{Binding StartY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
                                   X2="{Binding EndX,Converter={StaticResource PositionConverter},ConverterParameter=X}"
                                   Y2="{Binding EndY,Converter={StaticResource PositionConverter},ConverterParameter=Y}"
-                                  Stroke="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Yellow,Gray'}"
+                                  Stroke="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Yellow,LightGreen'}"
                                   StrokeThickness="5"
                                   MouseLeftButtonDown="Line_MouseLeftButtonDown"
                                   Tag="{Binding DataContext, ElementName=RootControl}">
@@ -74,6 +74,9 @@
                                     <ContextMenu>
                                         <MenuItem Header="削除"
                                                   Command="{Binding PlacementTarget.Tag.RemoveHelperLineCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
+                                        <MenuItem Header="複製"
+                                                  Command="{Binding PlacementTarget.Tag.DuplicateHelperLineCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{Binding}"/>
                                     </ContextMenu>
                                 </Line.ContextMenu>
