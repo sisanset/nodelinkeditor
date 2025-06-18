@@ -424,8 +424,7 @@ namespace NodeLinkEditor.ViewModels
             openFileDialog.Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() != true)
             { return; }
-            _undoRedoManager.Clear();
-            ClearSelection();
+            ClearMapDate();
             (var mapData, Nodes, Links, HelperLines) = FileIO.LoadNodeLinkFromJson(openFileDialog.FileName);
             if (mapData.YamlFilePath != string.Empty)
             {
@@ -443,14 +442,19 @@ namespace NodeLinkEditor.ViewModels
             openFileDialog.Filter = "YAML files (*.yaml)|*.yaml|All files (*.*)|*.*";
             if (openFileDialog.ShowDialog() != true)
             { return; }
-            _undoRedoManager.Clear();
-            ClearSelection();
-            Links.Clear();
-            Nodes.Clear();
-            HelperLines.Clear();
+            ClearMapDate();
             var mapData = FileIO.LoadMapFromYaml(openFileDialog.FileName);
             MapData = mapData;
             SetCoordConv();
+        }
+        private void ClearMapDate()
+        {
+            _undoRedoManager.Clear();
+            ClearSelectedLinks();
+            Links.Clear();
+            Nodes.Clear();
+            HelperLines.Clear();
+            NodeViewModel.ResetNodeName();
         }
         private void SetCoordConv()
         {

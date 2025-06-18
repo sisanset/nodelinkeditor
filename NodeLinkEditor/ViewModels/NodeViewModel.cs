@@ -11,7 +11,7 @@ namespace NodeLinkEditor.ViewModels
     {
         private static int NodeIdx = 0;
         private static HashSet<int> NodeNameSet = new HashSet<int>();
-        public static string GetNodeName(bool isIdx)
+        private static string GetNodeName(bool isIdx)
         {
             if (!isIdx) { return ""; }
             if (NodeNameSet.Contains(NodeIdx))
@@ -22,10 +22,15 @@ namespace NodeLinkEditor.ViewModels
             NodeNameSet.Add(NodeIdx);
             return $"{NodeIdx++}";
         }
-        public static void RegisterNodename(string name)
+        private static void RegisterNodeName(string name)
         {
             if (double.TryParse(name, out double idx))
             { NodeNameSet.Add((int)idx); }
+        }
+        public static void ResetNodeName()
+        {
+            NodeIdx = 0;
+            NodeNameSet.Clear();
         }
 
         public Guid ID { get; init; }
@@ -82,7 +87,7 @@ namespace NodeLinkEditor.ViewModels
         {
             ID = node.ID;
             Name = node.Name;
-            RegisterNodename(Name);
+            RegisterNodeName(Name);
             _x = node.X;
             _y = node.Y;
             var nodeAttributes = new List<NodeAttribute>(node.Attributes.Distinct());

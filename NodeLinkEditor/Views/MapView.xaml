@@ -182,7 +182,7 @@
                                        Width="50"
                                        Height="30"
                                        FontSize="20"
-                                       Foreground="Black"
+                                       Foreground="DarkGoldenrod"
                                        IsHitTestVisible="False"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
