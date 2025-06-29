@@ -6,8 +6,8 @@ namespace NodeLinkEditor.Others
     public class AttributeOption<T> : INotifyPropertyChanged
     {
         public T Attribute { get; }
-        private bool _isSelected;
-        public bool IsSelected
+        private bool? _isSelected = false;
+        public bool? IsSelected
         {
             get => _isSelected;
             set

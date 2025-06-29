@@ -49,10 +49,14 @@
             <MenuItem Header="Tools">
                 <MenuItem Header="Settings" Click="Settings_Click"/>
             </MenuItem>
-            <Ellipse Width="10" Height="10" Stroke="Black" StrokeThickness="1"
-                     Fill="{Binding MapEditor.IsMqttConnected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Green,Red'}"
-                     Margin="5,5,-10,5"/>
-            <MenuItem Header="MQTT">
+            <MenuItem >
+                <MenuItem.Header>
+                    <TextBlock Text="MQTT" Margin="-7,0,0,0" VerticalAlignment="Center"/>
+                </MenuItem.Header>
+                <MenuItem.Icon>
+                    <Ellipse Width="10" Height="10" Stroke="Black" StrokeThickness="1"
+                             Fill="{Binding MapEditor.IsMqttConnected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='Green,Red'}" Margin="5,0,0,0"/>
+                </MenuItem.Icon>
                 <MenuItem Header="Connect" Command="{Binding ConnectMQTTCommand}"/>
                 <MenuItem Header="DisConnect" Command="{Binding DisconnectMQTTCommand}"/>
             </MenuItem>

@@ -50,10 +50,14 @@ namespace NodeLinkEditor.Views
         {
             if (DataContext is not MapEditorViewModel viewModel) { return; }
             if (viewModel.SelectedLink == null) { return; }
+
             foreach (var link in viewModel.SelectedLinks)
             {
                 foreach (var att in viewModel.SelectedLink.AttributeOptions.Zip(link.AttributeOptions, (sa, la) => (sa, la)))
-                { att.la.IsSelected = att.sa.IsSelected; }
+                {
+                    if (att.sa.IsSelected == null) { continue; }
+                    att.la.IsSelected = att.sa.IsSelected;
+                }
             }
         }
 

@@ -93,12 +93,8 @@ namespace NodeLinkEditor.ViewModels
             var nodeAttributes = new List<NodeAttribute>(node.Attributes.Distinct());
             AssociatedNodes = [.. node.AssociatedNodes.Distinct()];
             AttributeOptions = [.. Enum.GetValues<NodeAttribute>().Cast<NodeAttribute>().Select(attr =>
-                {
-                    var option = new AttributeOption<NodeAttribute>(attr);
-                    if (nodeAttributes.Contains(attr))
-                    { option.IsSelected = true; }
-                    return option;
-                })];
+                    new AttributeOption<NodeAttribute>(attr){ IsSelected=nodeAttributes.Contains(attr)}
+                )];
         }
         public NodeViewModel(double x, double y, bool getNodeName = true) : this(new Node() { X = x, Y = y, Name = GetNodeName(getNodeName) })
         {
@@ -112,7 +108,7 @@ namespace NodeLinkEditor.ViewModels
                 X = X,
                 Y = Y,
                 AssociatedNodes = [.. AssociatedNodes],
-                Attributes = [.. AttributeOptions.Where(a => a.IsSelected).Select(a => a.Attribute)],
+                Attributes = [.. AttributeOptions.Where(a => a.IsSelected == true).Select(a => a.Attribute)],
             };
         }
 

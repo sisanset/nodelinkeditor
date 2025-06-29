@@ -212,7 +212,11 @@ namespace NodeLinkEditor.ViewModels
             if (SelectedLinks.Count == 1)
             { SelectedLink = new LinkViewModel(link.GetLinkCopy(), link.StartNode, link.EndNode); }
             else
-            { SelectedLink = new LinkViewModel(link.StartNode, link.EndNode); }
+            {
+                SelectedLink = new LinkViewModel(link.StartNode, link.EndNode);
+                foreach (var ao in SelectedLink.AttributeOptions) { ao.IsSelected = null; }
+                SelectedLink.IsTwoWay = null;
+            }
         }
         public void RemoveSelectedLink(LinkViewModel link)
         {
@@ -240,7 +244,10 @@ namespace NodeLinkEditor.ViewModels
             if (SelectedNodes.Count == 1)
             { SelectedNode = new NodeViewModel(node.GetNodeCopy()); }
             else
-            { SelectedNode = new NodeViewModel(0, 0, false); }
+            {
+                SelectedNode = new NodeViewModel(0, 0, false);
+                foreach (var ao in SelectedNode.AttributeOptions) { ao.IsSelected = null; }
+            }
         }
         public void RemoveSelectedNode(NodeViewModel node)
         {
@@ -666,7 +673,8 @@ namespace NodeLinkEditor.ViewModels
         private void SetNodesDistance(object? parameter)
         {
             if (SelectedNodes.Count != 2) { return; }
-            string? input = Interaction.InputBox("ノード間隔を入力してください:", "ノード間隔設定", NodeInterval.ToString());
+            var dst = Math.Sqrt(Math.Pow(SelectedNodes[0].X - SelectedNodes[1].X, 2) + Math.Pow(SelectedNodes[0].Y - SelectedNodes[1].Y, 2));
+            string? input = Interaction.InputBox("ノード間隔を入力してください:", "ノード間隔設定", $"{dst:F3}");
             if (string.IsNullOrEmpty(input))
             {
                 return;

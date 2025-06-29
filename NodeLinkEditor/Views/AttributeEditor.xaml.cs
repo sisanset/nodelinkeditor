@@ -25,7 +25,7 @@ namespace NodeLinkEditor.Views
                 { viewModel.MoveNodeCommand.Execute((node, value, node.Y)); }
                 else if (textBox.Name == "TextBoxNodePosY")
                 { viewModel.MoveNodeCommand.Execute((node, node.X, value)); }
-                viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNode.GetNodeCopy());
+                viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNodes[0].GetNodeCopy());
             }
         }
 
@@ -36,7 +36,10 @@ namespace NodeLinkEditor.Views
             foreach (var node in viewModel.SelectedNodes)
             {
                 foreach (var att in viewModel.SelectedNode.AttributeOptions.Zip(node.AttributeOptions, (sa, la) => (sa, la)))
-                { att.la.IsSelected = att.sa.IsSelected; }
+                {
+                    if (att.sa.IsSelected == null) { continue; }
+                    att.la.IsSelected = att.sa.IsSelected;
+                }
             }
         }
     }

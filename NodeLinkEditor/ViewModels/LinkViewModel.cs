@@ -56,8 +56,8 @@ namespace NodeLinkEditor.ViewModels
             get => _isSelected;
             set { _isSelected = value; OnPropertyChanged(); }
         }
-        private bool _isTwoWay = false;
-        public bool IsTwoWay
+        private bool? _isTwoWay = false;
+        public bool? IsTwoWay
         {
             get => _isTwoWay;
             set
@@ -76,7 +76,7 @@ namespace NodeLinkEditor.ViewModels
         private double _endThickness = 2;
         public double EndThickness
         {
-            get => _isTwoWay ? _startThickness : _endThickness;
+            get => _isTwoWay == true ? _startThickness : _endThickness;
             set { _endThickness = value; OnPropertyChanged(); }
         }
         public Point StartPoint
@@ -94,12 +94,8 @@ namespace NodeLinkEditor.ViewModels
             Name = link.Name;
             var linkAttributes = new List<LinkAttribute>(link.Attributes.Distinct());
             AttributeOptions = [.. Enum.GetValues<LinkAttribute>().Cast<LinkAttribute>().Select(attr =>
-                {
-                    var option=new AttributeOption<LinkAttribute>(attr);
-                    if(linkAttributes.Contains(attr))
-                    { option.IsSelected=true; }
-                    return option;
-                })];
+                     new AttributeOption<LinkAttribute>(attr) { IsSelected = linkAttributes.Contains(attr) }
+                )];
             StartToEndCost = link.StartToEndCost;
             EndToStartCost = link.EndToStartCost;
             _startNode = start;
@@ -117,10 +113,10 @@ namespace NodeLinkEditor.ViewModels
                 Name = Name,
                 StartNodeID = StartNode.ID,
                 EndNodeID = EndNode.ID,
-                Attributes = [.. AttributeOptions.Where(a => a.IsSelected).Select(a => a.Attribute)],
+                Attributes = [.. AttributeOptions.Where(a => a.IsSelected == true).Select(a => a.Attribute)],
                 StartToEndCost = StartToEndCost,
                 EndToStartCost = EndToStartCost,
-                IsTwoWay = IsTwoWay,
+                IsTwoWay = IsTwoWay != null && (bool)IsTwoWay,
             };
         }
         public event PropertyChangedEventHandler? PropertyChanged;
