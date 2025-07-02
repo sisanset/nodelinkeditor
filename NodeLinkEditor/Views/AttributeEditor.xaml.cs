@@ -42,5 +42,14 @@ namespace NodeLinkEditor.Views
                 }
             }
         }
+
+        private void NoButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (viewModel.SelectedNodes.Count != 1) { return; }
+            if (viewModel.SelectedNode == null) { return; }
+            viewModel.SelectedNodes[0].ChangeNodeName(TextBoxNodeNo.Text);
+            viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNodes[0].GetNodeCopy());
+        }
     }
 }

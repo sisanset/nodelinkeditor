@@ -4,6 +4,7 @@ namespace NodeLinkEditor.Models
     {
         Node,
         Link,
-        HelperLine
+        HelperLine,
+        None,
     }
 }

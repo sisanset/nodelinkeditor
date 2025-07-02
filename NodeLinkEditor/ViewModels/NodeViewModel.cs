@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Collections.ObjectModel;
 
+
 namespace NodeLinkEditor.ViewModels
 {
     public class NodeViewModel : INotifyPropertyChanged
@@ -22,15 +23,36 @@ namespace NodeLinkEditor.ViewModels
             NodeNameSet.Add(NodeIdx);
             return $"{NodeIdx++}";
         }
+        private static string GetNodeName(string offset)
+        {
+            if (string.IsNullOrEmpty(offset)) { return GetNodeName(true); }
+            if (!int.TryParse(offset, out int idx)) { return GetNodeName(true); }
+            while (NodeNameSet.Contains(idx))
+            { idx++; }
+            NodeNameSet.Add(idx);
+            return $"{idx}";
+        }
         private static void RegisterNodeName(string name)
         {
-            if (double.TryParse(name, out double idx))
-            { NodeNameSet.Add((int)idx); }
+            if (int.TryParse(name, out int idx))
+            { NodeNameSet.Add(idx); }
         }
         public static void ResetNodeName()
         {
             NodeIdx = 0;
             NodeNameSet.Clear();
+        }
+        public bool ChangeNodeName(string name)
+        {
+            if (!int.TryParse(name, out int newIdx)) { return false; }
+            if (NodeNameSet.Contains(newIdx)) { return false; }
+            var oldIdx = int.Parse(Name);
+            NodeNameSet.Remove(oldIdx);
+            NodeNameSet.Add(newIdx);
+            Name = name;
+            OnPropertyChanged(nameof(Name));
+            NodeIdx = new[] { oldIdx, newIdx + 1, NodeIdx }.Min();
+            return true;
         }
 
         public Guid ID { get; init; }
@@ -96,7 +118,11 @@ namespace NodeLinkEditor.ViewModels
                     new AttributeOption<NodeAttribute>(attr){ IsSelected=nodeAttributes.Contains(attr)}
                 )];
         }
+
         public NodeViewModel(double x, double y, bool getNodeName = true) : this(new Node() { X = x, Y = y, Name = GetNodeName(getNodeName) })
+        {
+        }
+        public NodeViewModel(double x, double y, string name) : this(new Node() { X = x, Y = y, Name = GetNodeName(name) })
         {
         }
         public Node GetNodeCopy()

@@ -99,7 +99,6 @@ namespace NodeLinkEditor.ViewModels
                 if (value)
                 {
                     SelectedMode = EditMode.Node;
-                    OnPropertyChanged(nameof(SelectedMode));
                 }
             }
         }
@@ -111,6 +110,17 @@ namespace NodeLinkEditor.ViewModels
                 if (value)
                 {
                     SelectedMode = EditMode.Link;
+                }
+            }
+        }
+        public bool IsNoneMode
+        {
+            get => SelectedMode == EditMode.None;
+            set
+            {
+                if (value)
+                {
+                    SelectedMode = EditMode.None;
                 }
             }
         }
@@ -619,6 +629,14 @@ namespace NodeLinkEditor.ViewModels
         // startNode-startInterval-node-interval-…-node-endInterval-endNode
         private void CreateNodesBetween(NodeViewModel startNode, NodeViewModel endNode, double startInterval, double endInterval, double interval)
         {
+            string? input = Interaction.InputBox("ノードの開始noを入力してください:", "ノードno設定", "");
+            string nodeNo = string.Empty;
+            if (string.IsNullOrEmpty(input))
+            { }
+            else if (int.TryParse(input, out int no))
+            { nodeNo = input; }
+            else { return; }
+
             double distance = Math.Sqrt(Math.Pow(endNode.X - startNode.X, 2) + Math.Pow(endNode.Y - startNode.Y, 2));
 
             if (distance - startInterval - endInterval <= 0.0)
@@ -640,7 +658,7 @@ namespace NodeLinkEditor.ViewModels
 
             if (startInterval != 0.0)
             {
-                var newNode = new NodeViewModel(startX, startY);
+                var newNode = new NodeViewModel(startX, startY, nodeNo);
                 newNodes.Add(newNode);
                 newLinks.Add(new LinkViewModel(startNode, newNode));
                 prevNode = newNode;
@@ -650,14 +668,14 @@ namespace NodeLinkEditor.ViewModels
             {
                 double newX = startX + deltaX * i;
                 double newY = startY + deltaY * i;
-                var newNode = new NodeViewModel(newX, newY);
+                var newNode = new NodeViewModel(newX, newY, nodeNo);
                 newNodes.Add(newNode);
                 newLinks.Add(new LinkViewModel(prevNode, newNode));
                 prevNode = newNode;
             }
             if (endInterval != 0.0)
             {
-                var newNode = new NodeViewModel(endX, endY);
+                var newNode = new NodeViewModel(endX, endY, nodeNo);
                 newNodes.Add(newNode);
                 newLinks.Add(new LinkViewModel(prevNode, newNode));
                 prevNode = newNode;

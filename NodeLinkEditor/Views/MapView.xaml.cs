@@ -532,7 +532,7 @@ namespace NodeLinkEditor.Views
         {
             if (DataContext is MapEditorViewModel viewModel && sender is Line line)
             {
-                if (viewModel.SelectedMode != EditMode.HelperLine)
+                if (viewModel.SelectedMode != EditMode.HelperLine && viewModel.SelectedMode != EditMode.None)
                 { return; }
                 e.Handled = true;
                 viewModel.SelectedHelperLine = line.DataContext as HelperLineViewModel;

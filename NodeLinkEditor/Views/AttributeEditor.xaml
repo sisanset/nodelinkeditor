@@ -26,6 +26,7 @@
             <RowDefinition Height="20"/>
             <RowDefinition Height="95"/>
             <RowDefinition Height="25"/>
+            <RowDefinition Height="25"/>
         </Grid.RowDefinitions>
         <TextBlock Text="座標値[m]:" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Margin="5,0,0,0" />
         <TextBlock Text="X:" Grid.Row="1" Grid.Column="0" Margin="40,0,0,0" />
@@ -59,5 +60,8 @@
         <Button Content="選択中のNodeを追加"
                     Command="{Binding AddAssociatedCommand}"
                     Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="3" HorizontalAlignment="Right" Margin="0,5,0,0"/>
+        <TextBlock Text="No:" Grid.Row="9" Grid.Column="0" Margin="20,5,0,0" />
+        <TextBox Text="{Binding SelectedNode.Name }"  Name="TextBoxNodeNo" Grid.Row="9" Grid.Column="1" Margin="0,3,0,0"/>
+        <Button Content="変更" Grid.Row="9" Grid.Column="2" Margin="3,3,0,0" Click="NoButton_Click"/>
     </Grid>
 </UserControl>

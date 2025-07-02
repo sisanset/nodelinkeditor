@@ -7,7 +7,7 @@
         xmlns:vm="clr-namespace:NodeLinkEditor.ViewModels"
         xmlns:converter="clr-namespace:NodeLinkEditor.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown">
+        Title="MainWindow" Height="500" Width="800" KeyDown="Window_KeyDown">
     <Window.Resources>
         <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <converter:BoolToColorConverter x:Key="BoolToColorConverter" />
@@ -78,12 +78,14 @@
                                        Visibility="{Binding SelectedLink, Converter={StaticResource NullToVisibilityConverter}}"/>
             <local:HelperLineAttributeEditor DataContext="{Binding MapEditor}" Grid.Column="1" Grid.Row="0" Width="200"
                                              Visibility="{Binding SelectedHelperLine, Converter={StaticResource NullToVisibilityConverter}}"/>
-            <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Margin="5,5,0,5">
-                <TextBlock Text="編集モード:" FontWeight="Bold" Margin="5,0,0,5"/>
+            <UniformGrid Columns="2" Rows="3" Grid.Row="1" Grid.Column="1" VerticalAlignment="Bottom" Margin="5,5,0,5">
+                <TextBlock Text="編集モード:" FontWeight="Bold" Margin="5,0,0,0"/>
+                <TextBlock/>
                 <RadioButton Content="ノード編集" IsChecked="{Binding MapEditor.IsNodeMode}" Margin="15,0,0,0" />
                 <RadioButton Content="リンク編集" IsChecked="{Binding MapEditor.IsLinkMode}" Margin="15,0,0,0" />
                 <RadioButton Content="補助線編集" IsChecked="{Binding MapEditor.IsHelperLineMode}"  Margin="15,0,0,0"/>
-            </StackPanel>
+                <RadioButton Content="編集のみ" IsChecked="{Binding MapEditor.IsNoneMode}" Margin="15,0,0,0"/>
+            </UniformGrid>
 
         </Grid>
     </DockPanel>
