@@ -101,6 +101,30 @@ namespace NodeLinkEditor.ViewModels
             return null; // Lines do not intersect within the segments
         }
 
+        public bool OnLine(System.Windows.Point other, double th)
+        {
+            double x1 = StartX, y1 = StartY, x2 = EndX, y2 = EndY;
+            double x3 = other.X, y3 = other.Y;
+            var vec1_2_x = x2 - x1;
+            var vec1_2_y = y2 - y1;
+            var vec1_3_x = x3 - x1;
+            var vec1_3_y = y3 - y1;
+            var t = (vec1_2_x * vec1_3_x + vec1_2_y * vec1_3_y) / (vec1_2_x * vec1_2_x + vec1_2_y * vec1_2_y);
+            var th_2 = th * th;
+            double d = double.MaxValue;
+            if (t < 0 || t > 1)
+            {
+                d = Math.Min((x1 - x3) * (x1 - x3) + (y1 - y3) * (y1 - y3), (x2 - x3) * (x2 - x3) + (y2 - y3) * (y2 - y3));
+            }
+            else
+            {
+                var p_x = x1 + t * vec1_2_x;
+                var p_y = y1 + t * vec1_2_y;
+                d = (p_x - x3) * (p_x - x3) + (p_y - y3) * (p_y - y3);
+            }
+            return d < th_2;
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {

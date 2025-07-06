@@ -102,7 +102,16 @@ namespace NodeLinkEditor.Views
                             break;
                     }
                     if (!viewModel.SelectedHelperLine.GetHelperLineCopy().HasEqualCoordinates(newLine))
-                    { viewModel.MoveHelperLineCommand.Execute((viewModel.SelectedHelperLine, newLine)); }
+                    {
+                        if (_moveCheckBox.IsChecked == true)
+                        {
+                            var deltaX = newLine.StartX - viewModel.SelectedHelperLine.StartX;
+                            var deltaY = newLine.StartY - viewModel.SelectedHelperLine.StartY;
+                            foreach (var n in viewModel.Nodes.Where(n => viewModel.SelectedHelperLine.OnLine(n.Point, 0.1)))
+                            { viewModel.MoveNodeCommand.Execute((n, n.Point.X + deltaX, n.Point.Y + deltaY)); }
+                        }
+                        viewModel.MoveHelperLineCommand.Execute((viewModel.SelectedHelperLine, newLine));
+                    }
                 }
             }
         }
