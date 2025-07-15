@@ -48,8 +48,14 @@ namespace NodeLinkEditor.Views
             if (DataContext is not MapEditorViewModel viewModel) { return; }
             if (viewModel.SelectedNodes.Count != 1) { return; }
             if (viewModel.SelectedNode == null) { return; }
+            var oldName = viewModel.SelectedNodes[0].Name;
             viewModel.SelectedNodes[0].ChangeNodeName(TextBoxNodeNo.Text);
             viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNodes[0].GetNodeCopy());
+            foreach (var node in viewModel.Nodes.Where(n => n.AssociatedNodes.Contains(oldName)))
+            {
+                node.AssociatedNodes.Remove(oldName);
+                node.AssociatedNodes.Add(viewModel.SelectedNode.Name);
+            }
         }
     }
 }
