@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using NodeLinkEditor.Models;
 using System.Windows;
 using Microsoft.VisualBasic;
+using NodeLinkEditor.Views;
 
 namespace NodeLinkEditor.ViewModels
 {
@@ -202,6 +203,7 @@ namespace NodeLinkEditor.ViewModels
         public ICommand CreateNodesBetweenCommand { get; }
         public ICommand SetNodesDistanceCommand { get; }
 
+        public ICommand ShowNodeListCommand { get; }
         public ICommand ConnectMQTTCommand { get; }
         public ICommand DisconnectMQTTCommand { get; }
 
@@ -343,6 +345,7 @@ namespace NodeLinkEditor.ViewModels
                 },
                 CanCreateNodesBetween);
             SetNodesDistanceCommand = new Others.RelayCommand(SetNodesDistance, CanSetNodesDistance);
+            ShowNodeListCommand = new Others.RelayCommand(ShowNodeList);
 
             MqttClient = new AMRMqttClient();
             MqttClient.SetMessageReceivedEvent((x, y, z) => Application.Current.Dispatcher.Invoke(() => AMRModel.SetAMR(x, y, z)));
@@ -714,5 +717,10 @@ namespace NodeLinkEditor.ViewModels
         }
         private bool CanSetNodesDistance(object? parameter) => SelectedNodes.Count == 2;
 
+        private void ShowNodeList(object? parameter)
+        {
+            var nodeListView = new NodeListView(this);
+            nodeListView.Show();
+        }
     }
 }

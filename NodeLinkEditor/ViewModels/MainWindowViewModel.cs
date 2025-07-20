@@ -23,6 +23,8 @@ namespace NodeLinkEditor.ViewModels
         public ICommand CreateNodesBetweenCommand => MapEditor.CreateNodesBetweenCommand;
         public ICommand SetNodesDistanceCommand => MapEditor.SetNodesDistanceCommand;
 
+        public ICommand ShowNodeListCommand => MapEditor.ShowNodeListCommand;
+
         public ICommand ConnectMQTTCommand => MapEditor.ConnectMQTTCommand;
         public ICommand DisconnectMQTTCommand => MapEditor.DisconnectMQTTCommand;
 

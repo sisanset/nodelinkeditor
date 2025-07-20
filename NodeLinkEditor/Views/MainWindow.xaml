@@ -48,6 +48,7 @@
             </MenuItem>
             <MenuItem Header="Tools">
                 <MenuItem Header="Settings" Click="Settings_Click"/>
+                <MenuItem Header="Node List" Command="{Binding ShowNodeListCommand}"/>
             </MenuItem>
             <MenuItem >
                 <MenuItem.Header>
