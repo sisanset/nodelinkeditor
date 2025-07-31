@@ -25,7 +25,6 @@ namespace NodeLinkEditor.Views
                 { viewModel.MoveNodeCommand.Execute((node, value, node.Y)); }
                 else if (textBox.Name == "TextBoxNodePosY")
                 { viewModel.MoveNodeCommand.Execute((node, node.X, value)); }
-                viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNodes[0].GetNodeCopy());
             }
         }
 
@@ -50,7 +49,6 @@ namespace NodeLinkEditor.Views
             if (viewModel.SelectedNode == null) { return; }
             var oldName = viewModel.SelectedNodes[0].Name;
             viewModel.SelectedNodes[0].ChangeNodeName(TextBoxNodeNo.Text);
-            viewModel.SelectedNode = new NodeViewModel(viewModel.SelectedNodes[0].GetNodeCopy());
             foreach (var node in viewModel.Nodes.Where(n => n.AssociatedNodes.Contains(oldName)))
             {
                 node.AssociatedNodes.Remove(oldName);

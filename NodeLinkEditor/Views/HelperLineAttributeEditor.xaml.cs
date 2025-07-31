@@ -16,101 +16,104 @@ namespace NodeLinkEditor.Views
 
         private void TextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel)
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+            if (viewModel.SelectedHelperLines.Count != 1) { return; }
+
+            var textBox = sender as TextBox;
+            if (textBox == null || viewModel.SelectedHelperLine == null) { return; }
+            var text = textBox.Text;
+            var name = textBox.Name;
+            if (double.TryParse(text, out double value))
             {
-                var textBox = sender as TextBox;
-                if (textBox == null || viewModel.SelectedHelperLine == null) { return; }
-                var text = textBox.Text;
-                var name = textBox.Name;
-                if (double.TryParse(text, out double value))
+                var newLine = viewModel.SelectedHelperLine.GetHelperLineCopy();
+                switch (name)
                 {
-                    var newLine = viewModel.SelectedHelperLine.GetHelperLineCopy();
-                    switch (name)
-                    {
-                        case "TextBoxStartX":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.StartX, value);
-                            break;
-                        case "TextBoxStartY":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.StartY, value);
-                            break;
-                        case "TextBoxEndX":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.EndX, value);
-                            break;
-                        case "TextBoxEndY":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.EndY, value);
-                            break;
-                        case "TextBoxTransX":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransX, value);
-                            break;
-                        case "TextBoxTransY":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransY, value);
-                            break;
-                        default:
-                            break;
-                    }
-                    if (!viewModel.SelectedHelperLine.GetHelperLineCopy().HasEqualCoordinates(newLine))
-                    { viewModel.MoveHelperLineCommand.Execute((viewModel.SelectedHelperLine, newLine)); }
+                    case "TextBoxStartX":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.StartX, value);
+                        break;
+                    case "TextBoxStartY":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.StartY, value);
+                        break;
+                    case "TextBoxEndX":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.EndX, value);
+                        break;
+                    case "TextBoxEndY":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.EndY, value);
+                        break;
+                    case "TextBoxTransX":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransX, value);
+                        break;
+                    case "TextBoxTransY":
+                        newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransY, value);
+                        break;
+                    default:
+                        break;
                 }
+                if (!viewModel.SelectedHelperLine.GetHelperLineCopy().HasEqualCoordinates(newLine))
+                { viewModel.MoveHelperLineCommand.Execute((viewModel.SelectedHelperLine, newLine)); }
             }
+
         }
 
         private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel)
+            if (DataContext is not MapEditorViewModel viewModel) { return; }
+
+            var button = sender as Button;
+            if (button == null || viewModel.SelectedHelperLine == null)
+            { return; }
+            var name = button.Name;
+            var text = string.Empty;
+            if (name == "ButtonTransXP" || name == "ButtonTransXM")
+            { text = TextBoxTransX.Text; }
+            if (name == "ButtonTransYP" || name == "ButtonTransYM")
+            { text = TextBoxTransY.Text; }
+            if (name == "ButtonTransHP" || name == "ButtonTransHM")
+            { text = TextBoxTransH.Text; }
+            if (name == "ButtonTransVP" || name == "ButtonTransVM")
+            { text = TextBoxTransV.Text; }
+            if (double.TryParse(text, out double value))
             {
-                var button = sender as Button;
-                if (button == null || viewModel.SelectedHelperLine == null)
-                { return; }
-                var name = button.Name;
-                var text = string.Empty;
-                if (name == "ButtonTransXP" || name == "ButtonTransXM")
-                { text = TextBoxTransX.Text; }
-                if (name == "ButtonTransYP" || name == "ButtonTransYM")
-                { text = TextBoxTransY.Text; }
-                if (name == "ButtonTransHP" || name == "ButtonTransHM")
-                { text = TextBoxTransH.Text; }
-                if (name == "ButtonTransVP" || name == "ButtonTransVM")
-                { text = TextBoxTransV.Text; }
-                if (double.TryParse(text, out double value))
+                foreach (var line in viewModel.SelectedHelperLines)
                 {
-                    var newLine = viewModel.SelectedHelperLine.GetHelperLineCopy();
+                    var newLine = line.GetHelperLineCopy();
                     switch (name)
                     {
                         case "ButtonTransXP":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransX, value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransX, value);
                             break;
                         case "ButtonTransXM":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransX, -value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransX, -value);
                             break;
                         case "ButtonTransYP":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransY, value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransY, value);
                             break;
                         case "ButtonTransYM":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransY, -value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransY, -value);
                             break;
                         case "ButtonTransHP":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransH, value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransH, value);
                             break;
                         case "ButtonTransHM":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransH, -value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransH, -value);
                             break;
                         case "ButtonTransVP":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransV, value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransV, value);
                             break;
                         case "ButtonTransVM":
-                            newLine = CreateMovedLine(viewModel.SelectedHelperLine, LineMoveDirection.TransV, -value);
+                            newLine = CreateMovedLine(line, LineMoveDirection.TransV, -value);
                             break;
                     }
-                    if (!viewModel.SelectedHelperLine.GetHelperLineCopy().HasEqualCoordinates(newLine))
+                    if (!line.GetHelperLineCopy().HasEqualCoordinates(newLine))
                     {
                         if (_moveCheckBox.IsChecked == true)
                         {
-                            var deltaX = newLine.StartX - viewModel.SelectedHelperLine.StartX;
-                            var deltaY = newLine.StartY - viewModel.SelectedHelperLine.StartY;
-                            foreach (var n in viewModel.Nodes.Where(n => viewModel.SelectedHelperLine.OnLine(n.Point, 0.1)))
+                            var deltaX = newLine.StartX - line.StartX;
+                            var deltaY = newLine.StartY - line.StartY;
+                            foreach (var n in viewModel.Nodes.Where(n => line.OnLine(n.Point, 0.1)))
                             { viewModel.MoveNodeCommand.Execute((n, n.Point.X + deltaX, n.Point.Y + deltaY)); }
                         }
-                        viewModel.MoveHelperLineCommand.Execute((viewModel.SelectedHelperLine, newLine));
+                        viewModel.MoveHelperLineCommand.Execute((line, newLine));
                     }
                 }
             }

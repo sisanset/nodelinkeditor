@@ -161,6 +161,11 @@ namespace NodeLinkEditor.Views
                         viewModel.DrawingHelperLine.EndY = point.Y;
                         viewModel.CreateHelperLineCommand.Execute(viewModel.DrawingHelperLine);
                     }
+                    else if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                    {
+                        IsRectangleDragging = true;
+                        UpdateRectangle(point, point);
+                    }
                     else
                     {
                         viewModel.DrawingHelperLine = new HelperLineViewModel(new Models.HelperLine
@@ -289,6 +294,11 @@ namespace NodeLinkEditor.Views
             {
                 foreach (var l in viewModel.Links.Where(l => nodes.Contains(l.StartNode) && nodes.Contains(l.EndNode)))
                 { viewModel.AddSelectedLink(l); }
+            }
+            else if (EditMode.HelperLine == viewModel.SelectedMode)
+            {
+                foreach (var hl in viewModel.HelperLines.Where(hl => rect.Contains(new Point(hl.StartX, hl.StartY)) && rect.Contains(new Point(hl.EndX, hl.EndY))))
+                { viewModel.AddSelectedHelperLine(hl); }
             }
         }
         private void UpdateRectangle(Point startPoint, Point endPoint)
@@ -530,12 +540,25 @@ namespace NodeLinkEditor.Views
 
         private void Line_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (DataContext is MapEditorViewModel viewModel && sender is Line line)
+            if (DataContext is MapEditorViewModel viewModel && sender is Line line && line.DataContext is HelperLineViewModel hl)
             {
                 if (viewModel.SelectedMode != EditMode.HelperLine && viewModel.SelectedMode != EditMode.None)
                 { return; }
                 e.Handled = true;
-                viewModel.SelectedHelperLine = line.DataContext as HelperLineViewModel;
+                if (Keyboard.IsKeyDown(Key.LeftCtrl))
+                {
+                    if (hl.IsSelected)
+                    { viewModel.RemoveSelectedHelperLine(hl); }
+                    else
+                    { viewModel.AddSelectedHelperLine(hl); }
+                }
+                else
+                {
+                    if (hl.IsSelected) { return; }
+                    viewModel.ClearSelectedHelperLines();
+                    viewModel.AddSelectedHelperLine(hl);
+                }
+
             }
         }
 

@@ -78,6 +78,9 @@
                                         <MenuItem Header="複製"
                                                   Command="{Binding PlacementTarget.Tag.DuplicateHelperLineCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                   CommandParameter="{Binding}"/>
+                                        <MenuItem Header="真ん中"
+                                                  Command="{Binding PlacementTarget.Tag.CreateCenterHelperLineCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding}"/>
                                     </ContextMenu>
                                 </Line.ContextMenu>
                             </Line>

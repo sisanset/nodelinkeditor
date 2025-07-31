@@ -52,7 +52,7 @@ namespace NodeLinkEditor.ViewModels
                 if (_selectedNode == null)
                 { return; }
                 ClearSelectedLinks();
-                SelectedHelperLine = null;
+                ClearSelectedHelperLines();
             }
         }
         public ObservableCollection<NodeViewModel> SelectedNodes { get; set; } = [];
@@ -70,7 +70,7 @@ namespace NodeLinkEditor.ViewModels
                 if (_selectedLink == null)
                 { return; }
                 ClearSelectedNodes();
-                SelectedHelperLine = null;
+                ClearSelectedHelperLines();
             }
         }
 
@@ -143,11 +143,7 @@ namespace NodeLinkEditor.ViewModels
             get => _selectedHelperLine;
             set
             {
-                if (_selectedHelperLine != null)
-                { _selectedHelperLine.IsSelected = false; }
                 _selectedHelperLine = value;
-                if (_selectedHelperLine != null)
-                { _selectedHelperLine.IsSelected = true; }
                 OnPropertyChanged();
 
                 if (_selectedHelperLine == null)
@@ -168,6 +164,8 @@ namespace NodeLinkEditor.ViewModels
             get => _DrawingHelperLine;
             set { _DrawingHelperLine = value; OnPropertyChanged(); }
         }
+        public ObservableCollection<HelperLineViewModel> SelectedHelperLines { get; set; } = [];
+
 
         public AMRMqttClient MqttClient { get; }
         public AMRViewModel AMRModel { get; set; } = new();
@@ -197,6 +195,7 @@ namespace NodeLinkEditor.ViewModels
         public ICommand ClearSelectionCommand { get; }
         public ICommand CreateHelperLineCommand { get; }
         public ICommand DuplicateHelperLineCommand { get; }
+        public ICommand CreateCenterHelperLineCommand { get; }
         public ICommand RemoveHelperLineCommand { get; }
         public ICommand MoveHelperLineCommand { get; }
         public ICommand CreateNodeAtIntersectionCommand { get; }
@@ -213,7 +212,7 @@ namespace NodeLinkEditor.ViewModels
             ClearSelectedNodes();
             StartNode = null;
             EndNode = null;
-            SelectedHelperLine = null;
+            ClearSelectedHelperLines();
             IsDrawingHelperLine = false;
         }
         public void AddSelectedLink(LinkViewModel link)
@@ -254,7 +253,7 @@ namespace NodeLinkEditor.ViewModels
             node.IsSelected = true;
             SelectedNodes.Add(node);
             if (SelectedNodes.Count == 1)
-            { SelectedNode = new NodeViewModel(node.GetNodeCopy()); }
+            { SelectedNode = node; }
             else
             {
                 SelectedNode = new NodeViewModel(0, 0, false);
@@ -266,10 +265,11 @@ namespace NodeLinkEditor.ViewModels
             if (!node.IsSelected) { return; }
             node.IsSelected = false;
             SelectedNodes.Remove(node);
+            if (StartNode == node) { StartNode = null; }
             if (SelectedNodes.Count == 0)
             { SelectedNode = null; }
             else if (SelectedNodes.Count == 1)
-            { SelectedNode = new NodeViewModel(SelectedNodes[0].GetNodeCopy()); }
+            { SelectedNode = SelectedNodes[0]; }
         }
         public void ClearSelectedNodes()
         {
@@ -277,6 +277,34 @@ namespace NodeLinkEditor.ViewModels
             { node.IsSelected = false; }
             SelectedNodes.Clear();
             SelectedNode = null;
+        }
+
+        public void AddSelectedHelperLine(HelperLineViewModel line)
+        {
+            if (line.IsSelected) { return; }
+            line.IsSelected = true;
+            SelectedHelperLines.Add(line);
+            if (SelectedHelperLines.Count == 1)
+            { SelectedHelperLine = line; }
+            else
+            { SelectedHelperLine = new HelperLineViewModel(); }
+        }
+        public void RemoveSelectedHelperLine(HelperLineViewModel line)
+        {
+            if (!line.IsSelected) { return; }
+            line.IsSelected = false;
+            SelectedHelperLines.Remove(line);
+            if (SelectedHelperLines.Count == 0)
+            { SelectedHelperLine = null; }
+            else if (SelectedHelperLines.Count == 1)
+            { SelectedHelperLine = SelectedHelperLines[0]; }
+        }
+        public void ClearSelectedHelperLines()
+        {
+            foreach (var line in SelectedHelperLines)
+            { line.IsSelected = false; }
+            SelectedHelperLines.Clear();
+            SelectedHelperLine = null;
         }
 
         public MapEditorViewModel()
@@ -296,6 +324,15 @@ namespace NodeLinkEditor.ViewModels
             MoveNodeCommand = new Others.RelayCommand(MoveNode);
             CreateHelperLineCommand = new Others.RelayCommand(CreateHelperLine);
             DuplicateHelperLineCommand = new Others.RelayCommand(DuplicateHelperLine);
+            CreateCenterHelperLineCommand = new Others.RelayCommand((_) =>
+            {
+                if (SelectedHelperLines.Count != 2) { return; }
+                var startX = (SelectedHelperLines[0].StartX + SelectedHelperLines[1].StartX) / 2;
+                var endX = (SelectedHelperLines[0].EndX + SelectedHelperLines[1].EndX) / 2;
+                var startY = (SelectedHelperLines[0].StartY + SelectedHelperLines[1].StartY) / 2;
+                var endY = (SelectedHelperLines[0].EndY + SelectedHelperLines[1].EndY) / 2;
+                CreateHelperLine(new HelperLineViewModel(new Models.HelperLine { StartX = startX, StartY = startY, EndX = endX, EndY = endY }));
+            }, (_) => 2 == SelectedHelperLines.Where(l => l != null).Count());
             RemoveHelperLineCommand = new Others.RelayCommand(RemoveHelperLine);
             MoveHelperLineCommand = new Others.RelayCommand(MoveHelperLine, CanMoveHelperLine);
             CreateNodeAtIntersectionCommand = new Others.RelayCommand(CreateNodeAtIntersection, CanCreateNodeAtIntersection);
@@ -320,7 +357,6 @@ namespace NodeLinkEditor.ViewModels
                 var node = SelectedNodes[0];
                 node.AssociatedNodes.Remove(name);
                 Nodes.SingleOrDefault(n => n.Name == name)?.AssociatedNodes.Remove(node.Name);
-                SelectedNode = new NodeViewModel(node.GetNodeCopy());
             });
 
             ClearSelectionCommand = new Others.RelayCommand((_) => ClearSelection());
@@ -384,11 +420,7 @@ namespace NodeLinkEditor.ViewModels
                 foreach (var l in SelectedLinks.Where(link => link.StartNode == node || link.EndNode == node))
                 { RemoveSelectedLink(l); }
                 foreach (var n in Nodes.Where(n => n.AssociatedNodes.Contains(node.Name)))
-                {
-                    n.AssociatedNodes.Remove(node.Name);
-                    if (SelectedNodes.Count == 1 && n.Name == SelectedNode?.Name)
-                    { SelectedNode = new NodeViewModel(n.GetNodeCopy()); }
-                }
+                { n.AssociatedNodes.Remove(node.Name); }
                 if (StartNode == node)
                 { StartNode = null; }
                 _undoRedoManager.Execute(new RemoveNodeCommand(Nodes, node, Links));
@@ -549,12 +581,10 @@ namespace NodeLinkEditor.ViewModels
 
         private void RemoveHelperLine(object? parameter)
         {
-            if (parameter is HelperLineViewModel line)
-            {
-                if (SelectedHelperLine == line)
-                { SelectedHelperLine = null; }
-                _undoRedoManager.Execute(new RemoveCommand<HelperLineViewModel>(HelperLines, line));
-            }
+            if (parameter is not HelperLineViewModel line) { return; }
+            RemoveSelectedHelperLine(line);
+            _undoRedoManager.Execute(new RemoveCommand<HelperLineViewModel>(HelperLines, line));
+
         }
         private void MoveHelperLine(object? parameter)
         {
